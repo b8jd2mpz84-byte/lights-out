@@ -11,6 +11,8 @@ Plain HTML/CSS/JS, no build step, installable on iOS and Android as a PWA.
 - **Race**: five starts against five AI drivers. Points for P1 to P6 (25, 18, 15, 12, 10, 8), nothing for a jump.
 - **Season**: an eight-round championship against the same five drivers. Each round is three starts; lowest total time wins (a jump adds 0.6 s), F1-style points build the standings, and the field gets quicker every round. Win the Club title to unlock the Pro field.
 
+After every Season round a card shows your three starts with their average, the round result and the standings. Tap any round in the R1–R8 strip to reopen its card, or **Review** for season stats (average and best start, jumps, wins, podiums), a per-round log and your past seasons.
+
 A reaction under 100 ms counts as a jump (anticipation), as in real starts.
 
 ## Run locally
