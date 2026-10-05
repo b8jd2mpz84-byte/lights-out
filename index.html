@@ -121,8 +121,8 @@
     .lede { margin: 0.5rem 0 0; max-width: 24rem; font-size: 1rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
     .dossier { margin: 0.25rem 0 0; font-size: 0.75rem; letter-spacing: 0.04em; }
 
-    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; border-radius: 0.75rem; background: var(--color-inset); padding: 0.25rem; }
-    .tabs button { min-width: 0; padding: 0 0.25rem; min-height: 2.75rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--color-muted); font-size: 0.875rem; font-weight: 600; }
+    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25rem; border-radius: 0.75rem; background: var(--color-inset); padding: 0.25rem; }
+    .tabs button { min-width: 0; padding: 0 0.25rem; min-height: 2.75rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600; }
     .tabs button[aria-selected="true"] { background: var(--color-panel); color: var(--color-ink); font-weight: 700; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
     .blurb { margin: -0.35rem 0 0; font-size: 0.875rem; font-weight: 500; color: var(--color-muted); }
 
@@ -210,6 +210,16 @@
     .grid-row.is-you { border-color: var(--color-ink); color: var(--color-ink); font-weight: 700; }
     .grid-row.is-fault .grid-time { color: var(--color-fault); }
     .grid-row.is-win .grid-pos { color: var(--color-go); }
+    .grid-row.has-extra { grid-template-columns: 2.2rem 1fr auto 3.2rem; }
+    .grid-extra { text-align: right; color: var(--color-ink); }
+    .dot { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.45rem; border-radius: 999px; vertical-align: 0.05rem; }
+    .calendar { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.25rem; margin: 0.75rem 0; padding: 0; list-style: none; }
+    .cal { padding: 0.3rem 0; border: 1px solid var(--color-line); border-radius: 0.4rem; background: var(--color-inset); text-align: center; font-family: var(--font-mono); font-size: 0.65rem; color: var(--color-muted); }
+    .cal b { display: block; font-size: 0.8rem; color: var(--color-ink); }
+    .cal.is-current { border-color: var(--color-ink); }
+    .cal.is-win b { color: var(--color-go); }
+    .season-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.25rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+    .season-meta .chip { margin-top: 0; }
     .rules-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .rules-actions .chip { margin-top: 0.75rem; }
     .file-note { min-height: 1.2rem; margin: 0.5rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
@@ -297,6 +307,7 @@
       <button type="button" role="tab" data-control data-mode="qualifying">Qualifying</button>
       <button type="button" role="tab" data-control data-mode="sprint">Sprint</button>
       <button type="button" role="tab" data-control data-mode="race">Race</button>
+      <button type="button" role="tab" data-control data-mode="season">Season</button>
     </div>
     <p class="blurb" id="blurb"></p>
 
@@ -339,6 +350,7 @@
             <li>Tap while any red is still on and it is a jump start.</li>
             <li>Qualifying is five attempts. The quickest clean start is pole.</li>
             <li>Sprint is ten. Each jump adds 0.500s to the total.</li>
+            <li>Season is eight rounds of three starts against the same five drivers. Lowest total time wins the round, a jump adds 0.6 s, and points build a championship table. Win the Club title to unlock the Pro field.</li>
             <li>Race is five starts against five AI drivers. Points for P1 to P6 are 25, 18, 15, 12, 10 and 8. A jump scores nothing.</li>
             <li>The clock starts the frame the lights go dark. Records stay on this device.</li>
             <li>Under 100 ms is not a reaction. It counts as a jump, same as the real thing.</li>
@@ -370,6 +382,7 @@
         practice: { label: "Practice", blurb: "Free runs. Chase a personal best.", runs: null, arm: 480, gap: 400, holdMin: 220, holdMax: 3000, penalty: 0 },
         qualifying: { label: "Qualifying", blurb: "Five starts. Your quickest clean one is pole.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
         sprint: { label: "Sprint", blurb: "Ten starts. Each jump adds half a second.", runs: 10, arm: 320, gap: 280, holdMin: 160, holdMax: 1100, penalty: 500 },
+        season: { label: "Season", blurb: "", runs: 3, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
         race: { label: "Race", blurb: "Five starts against five AI drivers. Points for every position.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
       };
       // Fictional field, slowest last. Times are drawn fresh each start so no two races repeat.
@@ -381,6 +394,10 @@
         { code: "EVR", mean: 300, sd: 30 },
       ];
       const POINTS = [25, 18, 15, 12, 10, 8];
+      const DRIVERS = ["You", ...FIELD.map((d) => d.code)];
+      const TEAM = { You: "#ff2d2d", APX: "#ff8a00", BRV: "#2f9bff", CLN: "#b36bff", DRK: "#d8dce6", EVR: "#ffd400" };
+      const SEASON = { rounds: 8, starts: 3, jumpMs: 600 };
+      const TRACKS = ["Harbour Loop", "Desert Ring", "Monte Alto", "Northfield", "Lakeside Park", "Sakura Hills", "Red Canyon", "Night City"];
       const VIA = { keyboard: "Keyboard", mouse: "Mouse", touch: "Touch", pen: "Pen" };
 
       const $ = (id) => document.getElementById(id);
@@ -486,7 +503,7 @@
       }
 
       function defaultSave() {
-        return { version: 1, bestMs: null, bestStreak: 0, runs: [], logged: 0, records: { qualifying: null, sprint: null, race: null }, session: [], tipDismissed: false, sound: true, shake: true, haptics: true, mode: "practice" };
+        return { version: 1, bestMs: null, bestStreak: 0, runs: [], logged: 0, records: { qualifying: null, sprint: null, race: null }, session: [], tipDismissed: false, sound: true, shake: true, haptics: true, mode: "practice", champ: newSeason("club"), titles: { club: 0, pro: 0 }, proUnlocked: false, seasonTier: "club" };
       }
       function bestMsOf(runs) {
         let best = null;
@@ -522,12 +539,60 @@
         return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
       }
       // Rank the player (ms, or null for a jump) against a fresh draw for each AI driver. Ties go to the AI.
-      function runRace(ms) {
-        const rows = FIELD.map((d) => ({ name: d.code, ms: Math.max(MIN_REACT_MS + 10, Math.round(d.mean + d.sd * gaussian())), you: false }));
+      function runRace(ms, factor = 1) {
+        const ai = FIELD.map((d) => Math.max(MIN_REACT_MS + 10, Math.round(factor * (d.mean + d.sd * gaussian()))));
+        const rows = FIELD.map((d, i) => ({ name: d.code, ms: ai[i], you: false }));
         rows.push({ name: "You", ms: ms == null ? Infinity : ms, you: true, fault: ms == null });
         rows.sort((a, b) => a.ms - b.ms);
         const pos = rows.findIndex((row) => row.you) + 1;
-        return { grid: rows, pos, points: ms == null ? 0 : POINTS[pos - 1] };
+        return { grid: rows, pos, points: ms == null ? 0 : POINTS[pos - 1], ai };
+      }
+
+      // ---- Season (championship) ----
+      function newSeason(tier) {
+        return { tier, round: 0, standings: Object.fromEntries(DRIVERS.map((name) => [name, 0])), results: [], complete: false };
+      }
+      // The field speeds up 1.5% a round; Pro starts 10% quicker than Club.
+      function seasonFactor(champ) { return (champ.tier === "pro" ? 0.9 : 1) - champ.round * 0.015; }
+      function standingsOrder(champ) {
+        const wins = (name) => champ.results.filter((r) => r.order[0] === name).length;
+        return DRIVERS.slice().sort((a, b) => champ.standings[b] - champ.standings[a] || wins(b) - wins(a));
+      }
+      function seasonFresh() { return save.champ.round === 0 && session.length === 0; }
+      function roundTotal(runs) { return runs.reduce((sum, run) => sum + (run.fault || run.ms == null ? SEASON.jumpMs : run.ms), 0); }
+      function settleRound() {
+        const champ = save.champ;
+        const rows = DRIVERS.map((name, i) => ({
+          name, you: i === 0,
+          ms: i === 0 ? roundTotal(session) : session.reduce((sum, run) => sum + (Array.isArray(run.ai) ? run.ai[i - 1] || 0 : 0), 0),
+        }));
+        rows.sort((a, b) => a.ms - b.ms || (a.you ? 1 : b.you ? -1 : 0));
+        rows.forEach((row, index) => { row.points = POINTS[index]; champ.standings[row.name] += row.points; });
+        const pos = rows.findIndex((row) => row.you) + 1;
+        champ.results.push({ pos, order: rows.map((row) => row.name), totals: rows.map((row) => row.ms) });
+        const track = TRACKS[champ.round];
+        champ.round += 1;
+        let champion = null;
+        let title = false;
+        if (champ.round >= SEASON.rounds) {
+          champ.complete = true;
+          champion = standingsOrder(champ)[0];
+          if (champion === "You") {
+            title = true;
+            save.titles[champ.tier] += 1;
+            if (champ.tier === "club" && !save.proUnlocked) { save.proUnlocked = true; save.seasonTier = "pro"; }
+          }
+        }
+        return { track, rows, pos, points: POINTS[pos - 1], seasonDone: champ.complete, champion, title, tier: champ.tier };
+      }
+      function sanitizeChamp(c) {
+        if (!c || typeof c !== "object") return newSeason("club");
+        const season = newSeason(c.tier === "pro" ? "pro" : "club");
+        season.results = Array.isArray(c.results) ? c.results.filter((r) => r && typeof r.pos === "number" && Array.isArray(r.order)).slice(0, SEASON.rounds) : [];
+        season.round = season.results.length;
+        for (const name of DRIVERS) season.standings[name] = c.standings && typeof c.standings[name] === "number" ? Math.max(0, Math.round(c.standings[name])) : 0;
+        season.complete = season.round >= SEASON.rounds;
+        return season;
       }
       function formatMs(ms) { return ms == null ? "—" : ms + " ms"; }
       function band(ms) {
@@ -565,6 +630,10 @@
           shake: typeof parsed.shake === "boolean" ? parsed.shake : true,
           haptics: typeof parsed.haptics === "boolean" ? parsed.haptics : true,
           mode,
+          champ: sanitizeChamp(parsed.champ),
+          titles: { club: num(parsed.titles && parsed.titles.club) || 0, pro: num(parsed.titles && parsed.titles.pro) || 0 },
+          proUnlocked: parsed.proUnlocked === true,
+          seasonTier: parsed.proUnlocked === true && parsed.seasonTier === "pro" ? "pro" : "club",
         };
       }
       function loadSave() {
@@ -642,6 +711,7 @@
         const total = MODES[save.mode].runs;
         if (total == null) return "Practice";
         const attempt = Math.min(total, currentAttempt(sim.phase, session.length, last));
+        if (save.mode === "season") return save.champ.complete ? "Season complete" : "Round " + (save.champ.round + 1) + " / " + SEASON.rounds + " · Start " + attempt + " / " + total;
         return save.mode === "qualifying" ? "Q" + attempt + " / " + total : save.mode === "race" ? "Race " + attempt + " / " + total : attempt + " / " + total;
       }
       function deriveView() {
@@ -649,7 +719,7 @@
         const complete = sim.phase === "result" && meta.runs != null && session.length >= meta.runs;
         const shell = {
           kicker: kickerFor(complete), status: "Tap to arm", tone: "idle", readout: null, unit: null, word: false,
-          hint: save.mode === "qualifying" ? "Five starts. Your quickest is pole." : save.mode === "sprint" ? "Ten starts. Each jump adds half a second." : save.mode === "race" ? "Five starts, five AI drivers. Beat them off the line." : "Five pairs, then darkness. Go the instant they drop.",
+          hint: save.mode === "qualifying" ? "Five starts. Your quickest is pole." : save.mode === "sprint" ? "Ten starts. Each jump adds half a second." : save.mode === "race" ? "Five starts, five AI drivers. Beat them off the line." : save.mode === "season" ? (save.champ.complete ? "Season over. Tap to start a new one." : "Three starts. Lowest total takes the round.") : "Five pairs, then darkness. Go the instant they drop.",
           via: null, banner: null, aria: "Arm the start", announcement: "", highlight: "ink",
         };
         if (sim.phase === "sequence") return { ...shell, status: "Hold", tone: "wait", hint: "Leave early and it's a jump start.", aria: "Lights are coming on. Wait for darkness." };
@@ -660,6 +730,23 @@
             if (pole == null) return { ...shell, status: "No time", tone: "fault", readout: "No time", word: true, hint: "Five jumps. Tap to start fresh.", aria: "Qualifying over with no time. Start again.", announcement: "Qualifying complete. No time.", highlight: "fault", banner: null };
             const bestPole = save.records.qualifying;
             return { ...shell, status: "Pole", tone: "go", readout: String(pole), unit: "ms", hint: last.record ? "New best pole. Tap for a new session." : bestPole != null ? "Best pole " + bestPole + " ms. Tap for a new session." : "Quickest of the five. Tap for a new session.", aria: "Pole " + pole + " milliseconds. Start again.", announcement: "Qualifying pole, " + pole + " milliseconds." + (last.record ? " New record." : ""), highlight: "go", banner: last.record ? "New record" : last.newBest ? "New best" : null };
+          }
+          if (save.mode === "season" && last.kind !== "missed" && last.pos) {
+            const champ = save.champ;
+            const place = standingsOrder(champ).indexOf("You") + 1;
+            const mine = champ.standings.You;
+            if (last.round && last.round.seasonDone) {
+              const r = last.round;
+              const tier = r.tier === "pro" ? "Pro" : "Club";
+              return { ...shell, kicker: "Season complete · " + tier, status: r.title ? "Champion" : "P" + place + " overall", tone: r.title ? "go" : "idle", readout: String(mine), unit: "pts", hint: r.title ? (r.tier === "club" && save.titles.club === 1 ? "Club title won. The Pro field is unlocked. Tap for a new season." : tier + " title won. Tap to go again.") : r.champion + " took the " + tier + " title. Tap for a new season.", banner: r.title ? "World champion" : r.pos === 1 ? "Round win" : null, aria: "Season over. You finished P" + place + " with " + mine + " points. Start a new season.", announcement: r.title ? "You are champion." : "Season over. P" + place + " overall.", highlight: r.title ? "go" : "ink" };
+            }
+            if (last.round) {
+              const r = last.round;
+              return { ...shell, kicker: "Round " + champ.round + " / " + SEASON.rounds + " complete", status: r.pos === 1 ? "Winner" : "P" + r.pos, tone: r.pos <= 3 ? "go" : "idle", readout: "+" + r.points, unit: "pts", hint: r.track + " done. P" + place + " in the championship on " + mine + " pts. Tap for round " + (champ.round + 1) + ".", banner: r.pos === 1 ? "Round win" : null, aria: "Round finished P" + r.pos + ". Start the next round.", announcement: r.track + ". Finished P" + r.pos + ". " + mine + " championship points.", highlight: r.pos <= 3 ? "go" : "ink" };
+            }
+            const jump = last.kind === "fault";
+            const sofar = (roundTotal(session) / 1000).toFixed(3);
+            return { ...shell, status: jump ? "Jump start" : "P" + last.pos, tone: jump ? "fault" : last.pos <= 3 ? "go" : "idle", readout: jump ? "Fault" : String(last.ms), unit: jump ? null : "ms", word: jump, via: last.input ? VIA[last.input] : null, hint: jump ? "+" + (SEASON.jumpMs / 1000).toFixed(1) + " s on your round total." : (last.pos === 1 ? "Quickest off the line. " : "P" + last.pos + " this start. ") + "Round total " + sofar + " s.", aria: (jump ? "Jump start. " : last.ms + " milliseconds. ") + "Next start.", announcement: (jump ? "Jump start." : last.ms + " milliseconds. P" + last.pos + "."), highlight: jump ? "fault" : last.pos <= 3 ? "go" : "ink", banner: last.newBest ? "New best" : null };
           }
           if (complete && save.mode === "race") {
             const total = session.reduce((sum, run) => sum + (run.points || 0), 0);
@@ -709,6 +796,16 @@
           ];
         }
         const attempt = Math.min(meta.runs, currentAttempt(sim.phase, session.length, last));
+        if (save.mode === "season") {
+          const champ = save.champ;
+          const started = champ.round > 0;
+          const leader = standingsOrder(champ)[0] === "You";
+          return [
+            { label: "Round", value: Math.min(SEASON.rounds, champ.round + (champ.complete ? 0 : 1)) + "/" + SEASON.rounds, tone: "ink" },
+            { label: "Points", value: String(champ.standings.You), tone: champ.standings.You > 0 ? "go" : "ink" },
+            { label: "Standing", value: started ? "P" + (standingsOrder(champ).indexOf("You") + 1) : "—", tone: started && leader ? "go" : "ink" },
+          ];
+        }
         if (save.mode === "race") {
           const total = session.reduce((sum, run) => sum + (run.points || 0), 0);
           return [
@@ -748,7 +845,9 @@
         $("via").textContent = view.via || "";
         $("play").setAttribute("aria-label", view.aria);
         $("dossier").textContent = dossier();
-        $("blurb").textContent = MODES[save.mode].blurb;
+        $("blurb").textContent = save.mode === "season"
+          ? (save.champ.complete ? "Season over. Tap the gantry for a new one." : "Round " + (save.champ.round + 1) + " · " + TRACKS[save.champ.round] + " · " + (save.champ.tier === "pro" ? "Pro" : "Club") + " field")
+          : MODES[save.mode].blurb;
         document.querySelectorAll("[data-mode]").forEach((button) => button.setAttribute("aria-selected", String(button.dataset.mode === save.mode)));
 
         const readout = $("readout");
@@ -790,7 +889,7 @@
         sound.querySelector(".icon-off").hidden = save.sound;
         $("reset").hidden = resetArmed;
         $("confirm").hidden = !resetArmed;
-        $("reset").disabled = !(save.logged || save.runs.length || save.bestMs != null || save.bestStreak > 0 || save.records.qualifying != null || save.records.sprint != null || save.records.race != null);
+        $("reset").disabled = !(save.logged || save.runs.length || save.bestMs != null || save.bestStreak > 0 || save.records.qualifying != null || save.records.sprint != null || save.records.race != null || save.champ.round > 0);
         const shake = $("shake");
         shake.setAttribute("aria-pressed", String(save.shake));
         shake.textContent = "Screen shake " + (save.shake ? "on" : "off");
@@ -840,25 +939,9 @@
           return;
         }
         board.className = "session-wrap";
-        if (save.mode === "race" && sim.phase === "result" && last && last.grid) {
-          const standings = document.createElement("ol");
-          standings.className = "grid-list";
-          standings.setAttribute("aria-label", "Start result");
-          last.grid.forEach((row, index) => {
-            const item = document.createElement("li");
-            item.className = "grid-row" + (row.you ? " is-you" : "") + (row.fault ? " is-fault" : "") + (index === 0 ? " is-win" : "");
-            const pos = document.createElement("span");
-            pos.className = "grid-pos";
-            pos.textContent = "P" + (index + 1);
-            const name = document.createElement("span");
-            name.textContent = row.name;
-            const time = document.createElement("span");
-            time.className = "grid-time";
-            time.textContent = row.fault ? "FS" : row.ms + " ms";
-            item.append(pos, name, time);
-            standings.append(item);
-          });
-          board.append(standings);
+        if (save.mode === "season") renderSeasonTop(board);
+        else if (save.mode === "race" && sim.phase === "result" && last && last.grid) {
+          board.append(table("Start result", last.grid.map((row) => ({ name: row.name, value: row.fault ? "FS" : row.ms + " ms", you: row.you, fault: row.fault })), false));
         }
         const pole = bestMsOf(session);
         const list = document.createElement("ol");
@@ -867,19 +950,103 @@
           const run = session[index];
           const isNext = sim.phase !== "result" && index === session.length;
           const isLatest = sim.phase === "result" && index === session.length - 1;
-          const isBest = run && !run.fault && run.ms != null && (save.mode === "race" ? run.pos === 1 : run.ms === pole);
+          const isBest = run && !run.fault && run.ms != null && (save.mode === "race" || save.mode === "season" ? run.pos === 1 : run.ms === pole);
           const item = document.createElement("li");
           item.className = "cell" + (isBest ? " is-best" : isNext || isLatest ? " is-next" : "");
           const label = document.createElement("div");
           label.className = "cell-label";
-          label.textContent = save.mode === "qualifying" ? "Q" + (index + 1) : String(index + 1);
+          label.textContent = save.mode === "qualifying" ? "Q" + (index + 1) : save.mode === "season" ? "S" + (index + 1) : String(index + 1);
           const value = document.createElement("div");
           value.className = "cell-value" + (run && run.fault ? " tone-fault" : isBest ? " tone-go" : "");
-          value.textContent = !run ? "—" : save.mode === "race" && run.pos ? "P" + run.pos : run.fault || run.ms == null ? "FS" : String(run.ms);
+          value.textContent = !run ? "—" : (save.mode === "race" || save.mode === "season") && run.pos ? "P" + run.pos : run.fault || run.ms == null ? "FS" : String(run.ms);
           item.append(label, value);
           list.append(item);
         }
         board.append(list);
+        if (save.mode === "season") renderSeasonBottom(board);
+      }
+
+      // rows: { name, value, extra?, you?, fault? }, already in finishing order.
+      function table(label, rows, withExtra) {
+        const wrap = document.createDocumentFragment();
+        const head = document.createElement("div");
+        head.className = "board-label";
+        head.textContent = label;
+        const list = document.createElement("ol");
+        list.className = "grid-list";
+        list.setAttribute("aria-label", label);
+        rows.forEach((row, index) => {
+          const item = document.createElement("li");
+          item.className = "grid-row" + (withExtra ? " has-extra" : "") + (row.you ? " is-you" : "") + (row.fault ? " is-fault" : "") + (index === 0 ? " is-win" : "");
+          const pos = document.createElement("span");
+          pos.className = "grid-pos";
+          pos.textContent = "P" + (index + 1);
+          const name = document.createElement("span");
+          const dot = document.createElement("span");
+          dot.className = "dot";
+          dot.style.background = TEAM[row.name] || "var(--color-muted)";
+          name.append(dot, row.name);
+          const value = document.createElement("span");
+          value.className = "grid-time";
+          value.textContent = row.value;
+          item.append(pos, name, value);
+          if (withExtra) {
+            const extra = document.createElement("span");
+            extra.className = "grid-extra";
+            extra.textContent = row.extra;
+            item.append(extra);
+          }
+          list.append(item);
+        });
+        wrap.append(head, list);
+        return wrap;
+      }
+      function renderSeasonTop(board) {
+        if (sim.phase !== "result" || !last) return;
+        if (last.round) {
+          const r = last.round;
+          board.append(table(r.track + " · round result", r.rows.map((row) => ({ name: row.name, value: (row.ms / 1000).toFixed(3) + " s", extra: "+" + row.points, you: row.you })), true));
+        } else if (last.grid) {
+          board.append(table("Start " + session.length + " of " + SEASON.starts, last.grid.map((row) => ({ name: row.name, value: row.fault ? "FS" : row.ms + " ms", you: row.you, fault: row.fault })), false));
+        }
+      }
+      function renderSeasonBottom(board) {
+        const champ = save.champ;
+        const cal = document.createElement("ol");
+        cal.className = "calendar";
+        cal.setAttribute("aria-label", "Your finish in each round");
+        for (let i = 0; i < SEASON.rounds; i += 1) {
+          const result = champ.results[i];
+          const item = document.createElement("li");
+          item.className = "cal" + (result && result.pos === 1 ? " is-win" : "") + (!champ.complete && i === champ.round ? " is-current" : "");
+          item.title = TRACKS[i];
+          const value = document.createElement("b");
+          value.textContent = result ? "P" + result.pos : "—";
+          item.append("R" + (i + 1), value);
+          cal.append(item);
+        }
+        board.append(cal);
+        const order = standingsOrder(champ);
+        board.append(table("Championship · " + (champ.tier === "pro" ? "Pro" : "Club") + " field", order.map((name) => ({ name, value: champ.standings[name] + " pts", you: name === "You" })), false));
+        const meta = document.createElement("div");
+        meta.className = "season-meta";
+        const titles = document.createElement("span");
+        titles.textContent = "Titles · Club " + save.titles.club + " · Pro " + save.titles.pro;
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.dataset.control = "";
+        chip.textContent = save.proUnlocked ? "Next: " + (save.seasonTier === "pro" ? "Pro" : "Club") : "Pro locked";
+        chip.disabled = !save.proUnlocked;
+        chip.setAttribute("aria-label", save.proUnlocked ? "Switch the field for the next season" : "Win the Club title to unlock the Pro field");
+        chip.addEventListener("click", () => {
+          save.seasonTier = save.seasonTier === "pro" ? "club" : "pro";
+          if (seasonFresh()) save.champ = newSeason(save.seasonTier);
+          persist();
+          render();
+        });
+        meta.append(titles, chip);
+        board.append(meta);
       }
 
       function settleSession() {
@@ -900,7 +1067,7 @@
         let record = false;
         if (total != null) {
           session = [...session, entry].slice(0, total);
-          if (session.length >= total) record = settleSession();
+          if (session.length >= total && save.mode !== "season") record = settleSession();
         }
         persist();
         return record;
@@ -946,6 +1113,7 @@
       function begin(now) {
         clearTimers();
         const meta = MODES[save.mode];
+        if (save.mode === "season" && save.champ.complete) { save.champ = newSeason(save.seasonTier); session = []; }
         if (meta.runs != null && session.length >= meta.runs) session = [];
         sim.lightAt = Array.from({ length: 5 }, (_, i) => now + meta.arm + i * meta.gap);
         const hold = meta.holdMin + Math.random() * (meta.holdMax - meta.holdMin);
@@ -959,15 +1127,29 @@
         frameStage();
         sim.raf = requestAnimationFrame(loop);
       }
+      // Race and Season draw the AI field for this start and stamp the player's position on the entry.
+      function startField(entry, ms) {
+        if (save.mode !== "race" && save.mode !== "season") return null;
+        const race = runRace(ms, save.mode === "season" ? seasonFactor(save.champ) : 1);
+        entry.pos = race.pos;
+        if (save.mode === "race") entry.points = race.points;
+        else entry.ai = race.ai;
+        return race;
+      }
+      function closeRound() {
+        if (save.mode !== "season" || session.length < SEASON.starts) return null;
+        const round = settleRound();
+        persist();
+        return round;
+      }
       function finishFault(input, reason) {
         sim.phase = "result";
         sim.lit = 0;
         const entry = { ms: null, fault: true, mode: save.mode, at: Date.now(), input };
         if (reason) entry.reason = reason;
-        const race = save.mode === "race" ? runRace(null) : null;
-        if (race) { entry.pos = race.pos; entry.points = race.points; }
+        const race = startField(entry, null);
         const record = commit(entry, false);
-        last = { kind: "fault", ms: null, input, newBest: false, record, reason, ...(race || {}) };
+        last = { kind: "fault", ms: null, input, newBest: false, record, reason, ...(race || {}), round: closeRound() };
         pop += 1;
         haptic(2);
         playFault();
@@ -979,12 +1161,11 @@
         const isNew = save.bestMs == null || ms < save.bestMs;
         sim.phase = "result";
         const entry = { ms, fault: false, mode: save.mode, at: Date.now(), input };
-        const race = save.mode === "race" ? runRace(ms) : null;
-        if (race) { entry.pos = race.pos; entry.points = race.points; }
+        const race = startField(entry, ms);
         const record = commit(entry, isNew);
-        last = { kind: "time", ms, input, newBest: isNew, record, ...(race || {}) };
+        last = { kind: "time", ms, input, newBest: isNew, record, ...(race || {}), round: closeRound() };
         pop += 1;
-        if (isNew || record) { haptic(3); playBest(); triggerShake(); triggerFlash("best"); }
+        if (isNew || record || (last.round && last.round.pos === 1)) { haptic(3); playBest(); triggerShake(); triggerFlash("best"); }
         else { haptic(1); playLock(); }
         render();
       }
