@@ -45,8 +45,8 @@
     html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--color-canvas); }
     html.is-playing, html.is-playing body { touch-action: none; overflow: hidden; }
     html.is-playing [data-control] { pointer-events: none; }
-    html.is-playing .tools, html.is-playing .tabs, html.is-playing .blurb, html.is-playing .rules { opacity: 0.45; }
-    .tools, .tabs, .blurb, .rules { transition: opacity 120ms ease-out; }
+    html.is-playing .tools, html.is-playing .mode-btn { opacity: 0.45; }
+    .tools, .mode-btn { transition: opacity 120ms ease-out; }
 
     body {
       margin: 0;
@@ -89,42 +89,37 @@
     }
 
     .top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-    .eyebrow, .dossier, .foot, .kicker, .banner, .via, .stat-label, .board-label, .cell-label {
+    .foot, .kicker, .banner, .via, .stat-label, .board-label, .cell-label, .card-head, .card-sub, .card-foot, .about, .file-note {
       font-family: var(--font-mono);
       font-weight: 500;
       color: var(--color-muted);
     }
-    .eyebrow { margin: 0; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .wordmark { margin: 0; font-size: 1.6rem; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
     .tools { display: flex; align-items: center; gap: 0.5rem; }
-    .icon-btn, .confirm-btn {
+    .icon-btn {
       display: grid;
       place-items: center;
+      width: 2.75rem;
       height: 2.75rem;
+      padding: 0;
       border-radius: 0.75rem;
       border: 1px solid var(--color-line);
       background: var(--color-inset);
       color: var(--color-muted);
     }
-    .icon-btn { width: 2.75rem; padding: 0; }
     .icon-btn[aria-pressed="true"] { color: var(--color-ink); }
     .icon-btn svg { width: 1.25rem; height: 1.25rem; }
-    .confirm-btn {
-      padding: 0 0.75rem;
-      border-color: var(--color-fault);
-      background: transparent;
-      color: var(--color-fault);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.04em;
-    }
-    h1 { margin: 0.5rem 0 0; font-size: 2.25rem; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
-    .lede { margin: 0.5rem 0 0; max-width: 24rem; font-size: 1rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
-    .dossier { margin: 0.25rem 0 0; font-size: 0.75rem; letter-spacing: 0.04em; }
 
-    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25rem; border-radius: 0.75rem; background: var(--color-inset); padding: 0.25rem; }
-    .tabs button { min-width: 0; padding: 0 0.25rem; min-height: 2.75rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600; }
-    .tabs button[aria-selected="true"] { background: var(--color-panel); color: var(--color-ink); font-weight: 700; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
-    .blurb { margin: -0.35rem 0 0; font-size: 0.875rem; font-weight: 500; color: var(--color-muted); }
+    .mode-btn {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 0.75rem; row-gap: 0.1rem;
+      width: 100%; min-height: 3.5rem; padding: 0.55rem 0.9rem; text-align: left;
+      border: 1px solid var(--color-line); border-radius: 0.9rem; background: var(--color-inset); color: var(--color-ink);
+    }
+    .mode-btn:active { background: var(--color-panel); }
+    .mode-name { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+    .mode-blurb { grid-column: 1; font-size: 0.85rem; font-weight: 500; line-height: 1.3; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mode-caret { grid-column: 2; grid-row: 1 / span 2; display: grid; place-items: center; color: var(--color-muted); }
+    .mode-caret svg { width: 1.25rem; height: 1.25rem; }
 
     .panel { overflow: hidden; border: 1px solid var(--color-line); border-radius: 1.25rem; background: var(--color-panel); box-shadow: 0 28px 60px -32px black; }
     .play-surface { display: block; width: 100%; cursor: pointer; background: transparent; text-align: center; padding: 1rem 1rem 0.4rem; touch-action: none; }
@@ -142,7 +137,7 @@
     .pairs { display: flex; flex: 1; justify-content: space-between; gap: 0.4rem; }
     .pair { display: flex; flex-direction: column; align-items: center; gap: 0.38rem; }
     .bulb {
-      width: 1.65rem; height: 1.65rem; border-radius: 999px;
+      width: 1.8rem; height: 1.8rem; border-radius: 999px;
       background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-signal) 30%, black), var(--color-red-dim) 54%, black 78%);
       box-shadow: inset 0 -5px 7px black, 0 0 0 3px var(--color-bezel), 0 0 0 4px color-mix(in srgb, black 45%, var(--color-line));
     }
@@ -197,38 +192,68 @@
     .cell-label { font-size: 0.75rem; }
     .cell-value { margin-top: 0.125rem; font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-    .rules { border-top: 1px solid var(--color-line); }
-    .rules summary { display: flex; min-height: 2.75rem; align-items: center; justify-content: space-between; padding: 0 1rem; font-size: 0.875rem; font-weight: 600; color: var(--color-muted); cursor: pointer; list-style: none; }
-    .rules summary::-webkit-details-marker { display: none; }
-    .rules-body { padding: 0 1rem 1rem; }
-    .rules ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
-    .rules li { font-size: 0.875rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
-    .chip { min-height: 2.75rem; margin-top: 0.75rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-inset); padding: 0.4rem 0.8rem; font-size: 0.92rem; }
+    .chip { min-height: 2.75rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-inset); padding: 0.4rem 0.8rem; font-size: 0.92rem; }
     .chip[aria-pressed="false"] { color: var(--color-muted); }
+    .chip.is-danger { border-color: var(--color-fault); color: var(--color-fault); }
+    .chip.is-primary { display: block; width: 100%; margin-top: 0.85rem; border-color: var(--color-ink); background: var(--color-ink); color: var(--color-canvas); font-weight: 700; }
     .grid-list { display: grid; gap: 0.25rem; margin: 0 0 0.75rem; padding: 0; list-style: none; font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
-    .grid-row { display: grid; grid-template-columns: 2.2rem 1fr auto; gap: 0.5rem; padding: 0.35rem 0.65rem; border: 1px solid transparent; border-radius: 0.5rem; background: var(--color-inset); color: var(--color-muted); text-align: left; }
+    .grid-row { display: grid; width: 100%; grid-template-columns: 2.2rem 1fr auto; gap: 0.5rem; align-items: center; padding: 0.35rem 0.65rem; border: 1px solid transparent; border-radius: 0.5rem; background: var(--color-inset); color: var(--color-muted); text-align: left; }
+    button.grid-row { min-height: 2.6rem; font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    button.grid-row::after { content: "›"; margin-left: 0.25rem; color: var(--color-muted); font-size: 1rem; }
+    .grid-row.is-log { grid-template-columns: 2rem minmax(0, 1fr) auto auto auto auto; }
+    .grid-row.is-log .grid-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .grid-row.is-you { border-color: var(--color-ink); color: var(--color-ink); font-weight: 700; }
     .grid-row.is-fault .grid-time { color: var(--color-fault); }
     .grid-row.is-win .grid-pos { color: var(--color-go); }
     .grid-row.has-extra { grid-template-columns: 2.2rem 1fr auto 3.2rem; }
     .grid-extra { text-align: right; color: var(--color-ink); }
     .dot { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.45rem; border-radius: 999px; vertical-align: 0.05rem; }
-    .calendar { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.25rem; margin: 0.75rem 0; padding: 0; list-style: none; }
-    .cal { padding: 0.3rem 0; border: 1px solid var(--color-line); border-radius: 0.4rem; background: var(--color-inset); text-align: center; font-family: var(--font-mono); font-size: 0.65rem; color: var(--color-muted); }
+    .calendar { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.25rem; margin: 0.75rem 0; padding: 0; }
+    .cal { min-width: 0; padding: 0.3rem 0; border: 1px solid var(--color-line); border-radius: 0.4rem; background: var(--color-inset); text-align: center; font-family: var(--font-mono); font-size: 0.65rem; color: var(--color-muted); }
+    .cal:disabled { opacity: 1; cursor: default; }
+    .cal:not(:disabled) { color: var(--color-ink); }
     .cal b { display: block; font-size: 0.8rem; color: var(--color-ink); }
     .cal.is-current { border-color: var(--color-ink); }
     .cal.is-win b { color: var(--color-go); }
-    .season-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.25rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
-    .season-meta .chip { margin-top: 0; }
-    .rules-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .rules-actions .chip { margin-top: 0.75rem; }
-    .file-note { min-height: 1.2rem; margin: 0.5rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+    .season-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 0.75rem; margin: 0 0 0.25rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+    .season-meta .actions { display: flex; gap: 0.5rem; }
+    .file-note { min-height: 1.2rem; margin: 0.5rem 0 0; font-size: 0.75rem; }
+    .about { margin: 0.75rem 0 0; font-size: 0.75rem; line-height: 1.5; }
+
+    /* Bottom sheet: mode picker, settings, season cards */
+    .sheet { position: fixed; inset: auto 0 0 0; width: min(100%, 32rem); max-width: none; max-height: 88dvh; margin: 0 auto; padding: 0; border: 1px solid var(--color-line); border-bottom: 0; border-radius: 1.25rem 1.25rem 0 0; background: var(--color-panel); color: var(--color-ink); box-shadow: 0 -24px 60px -24px black; overflow: hidden; }
+    .sheet::backdrop { background: rgb(0 0 0 / 0.62); }
+    .sheet[open] { display: flex; flex-direction: column; }
+    .sheet-grip { flex: none; width: 2.5rem; height: 4px; margin: 0.6rem auto 0; border-radius: 999px; background: var(--color-line); }
+    .sheet-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.6rem 1rem 0.5rem; }
+    .sheet-title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+    .sheet-body { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 1rem max(1.25rem, env(safe-area-inset-bottom)); }
+    .sheet .grid-list { margin-bottom: 0.9rem; }
+    .sheet .stats { padding: 0 0 0.9rem; }
+    .mode-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 0.75rem; row-gap: 0.15rem; width: 100%; margin: 0 0 0.5rem; padding: 0.75rem 0.9rem; text-align: left; border: 1px solid var(--color-line); border-radius: 0.9rem; background: var(--color-inset); color: var(--color-ink); }
+    .mode-card[aria-pressed="true"] { border-color: var(--color-ink); }
+    .mode-card b { font-size: 1.05rem; font-weight: 700; }
+    .mode-card small { grid-column: 1; font-size: 0.85rem; font-weight: 500; line-height: 1.3; color: var(--color-muted); }
+    .mode-card .best { grid-column: 2; grid-row: 1 / span 2; align-self: center; max-width: 7.5rem; font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.3; text-align: right; color: var(--color-muted); }
+    .mode-card[aria-pressed="true"] .best { color: var(--color-go); }
+    .setting { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: 3.25rem; padding: 0.3rem 0; border-bottom: 1px solid var(--color-line); font-size: 1rem; font-weight: 600; }
+    .setting-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.4rem; }
+    .rules-list { margin-top: 1rem; }
+    .rules-list ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .rules-list li { font-size: 0.875rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
+    .card-head { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .card-title { margin: 0.15rem 0 0; font-size: 1.7rem; line-height: 1.05; font-weight: 700; }
+    .card-sub { margin: 0.25rem 0 0.9rem; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .card-sub .tone-go, .card-sub .tone-fault { font-weight: 700; }
+    .card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; padding-top: 0.75rem; border-top: 1px solid var(--color-line); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .session.cols-4 { grid-template-columns: repeat(4, 1fr); margin-bottom: 0.9rem; }
+    .cell.is-avg { border-style: dashed; }
+    .empty { margin: 0 0 0.9rem; padding: 0.9rem; border: 1px dashed var(--color-line); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; color: var(--color-muted); text-align: center; }
     .install { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0; padding: 0.6rem 0.75rem 0.6rem 1rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-inset); font-size: 0.875rem; font-weight: 500; line-height: 1.3; color: var(--color-muted); }
     .install[hidden] { display: none; }
     .install strong { color: var(--color-ink); font-weight: 700; }
     .install button { flex: none; min-height: 2.75rem; padding: 0 0.85rem; border: 1px solid var(--color-line); border-radius: 0.6rem; background: transparent; color: var(--color-ink); font-size: 0.875rem; }
     .foot { margin: 0; text-align: center; font-size: 0.75rem; letter-spacing: 0.04em; }
-    .desk { display: none; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
     @keyframes lamp-in { from { transform: scale(0.86); } to { transform: scale(1); } }
@@ -252,21 +277,18 @@
     @media (min-width: 640px) {
       .bulb { width: 2.05rem; height: 2.05rem; }
     }
-    @media (hover: hover) and (pointer: fine) {
-      .desk { display: inline; }
-      .phone { display: none; }
+    @media (min-width: 640px) and (min-height: 521px) {
+      .sheet { inset: 50% auto auto 50%; transform: translate(-50%, -50%); max-height: 86vh; border-radius: 1.25rem; border-bottom: 1px solid var(--color-line); }
     }
     @media (orientation: landscape) and (max-height: 520px) {
-      .shell { width: min(100%, 64rem); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr); grid-template-rows: repeat(4, auto) 1fr; align-content: start; column-gap: 1.25rem; row-gap: 0.6rem; padding-top: max(0.75rem, env(safe-area-inset-top)); padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+      .shell { width: min(100%, 64rem); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr); grid-template-rows: repeat(3, auto) 1fr; align-content: start; column-gap: 1.25rem; row-gap: 0.6rem; padding-top: max(0.75rem, env(safe-area-inset-top)); padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
       .shell > header { grid-column: 1; grid-row: 1; }
-      .shell > .tabs { grid-column: 1; grid-row: 2; }
-      .shell > .blurb { grid-column: 1; grid-row: 3; margin: 0; }
-      .shell > .install { grid-column: 1; grid-row: 4; }
+      .shell > .mode-btn { grid-column: 1; grid-row: 2; }
+      .shell > .install { grid-column: 1; grid-row: 3; }
       .shell > .panel { grid-column: 2; grid-row: 1 / -1; align-self: start; }
-      .shell > .foot { grid-column: 1; grid-row: 5; align-self: start; text-align: left; }
-      h1 { font-size: 1.75rem; }
-      .lede { display: none; }
+      .shell > .foot { grid-column: 1; grid-row: 4; align-self: start; text-align: left; }
       .play-surface { padding-top: 0.6rem; }
+      .sheet { inset: 0 auto 0 50%; transform: translateX(-50%); width: min(100%, 40rem); max-height: none; border-radius: 0; border-bottom: 1px solid var(--color-line); }
       .grid-mark { display: none; }
       .gantry-bar { padding: 0.55rem 0.7rem; }
       .led { margin-top: 0.5rem; }
@@ -283,33 +305,24 @@
 </head>
 <body>
   <main class="shell">
-    <header>
-      <div class="top">
-        <p class="eyebrow">Reaction start</p>
-        <div class="tools">
-          <button type="button" class="icon-btn" id="sound" data-control aria-pressed="true" aria-label="Mute sound">
-            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-            <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>
-          </button>
-          <button type="button" class="icon-btn" id="reset" data-control aria-label="Reset records">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-          </button>
-          <button type="button" class="confirm-btn" id="confirm" data-control hidden>Confirm</button>
-        </div>
+    <header class="top">
+      <h1 class="wordmark">Lights Out</h1>
+      <div class="tools">
+        <button type="button" class="icon-btn" id="sound" data-control aria-pressed="true" aria-label="Mute sound">
+          <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>
+        </button>
+        <button type="button" class="icon-btn" id="settings" data-control aria-label="Settings and rules" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
-      <h1>Lights Out</h1>
-      <p class="lede">Formula start, stripped to the reflex. Darkness is the signal.</p>
-      <p class="dossier" id="dossier"></p>
     </header>
 
-    <div class="tabs" role="tablist" aria-label="Session">
-      <button type="button" role="tab" data-control data-mode="practice">Practice</button>
-      <button type="button" role="tab" data-control data-mode="qualifying">Qualifying</button>
-      <button type="button" role="tab" data-control data-mode="sprint">Sprint</button>
-      <button type="button" role="tab" data-control data-mode="race">Race</button>
-      <button type="button" role="tab" data-control data-mode="season">Season</button>
-    </div>
-    <p class="blurb" id="blurb"></p>
+    <button type="button" class="mode-btn" id="modeBtn" data-control aria-haspopup="dialog" aria-label="Change mode">
+      <span class="mode-name" id="modeName"></span>
+      <span class="mode-blurb" id="blurb"></span>
+      <span class="mode-caret" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+    </button>
 
     <section class="panel">
       <div class="play-surface" id="play" role="button" tabindex="0" aria-label="Arm the start">
@@ -341,38 +354,14 @@
       </div>
       <div class="stats" id="stats"></div>
       <div id="board"></div>
-      <details class="rules" data-control>
-        <summary>Rules and feel <span aria-hidden="true">+</span></summary>
-        <div class="rules-body">
-          <ul>
-            <li>Five pairs light left to right. When they all go dark, that is the start.</li>
-            <li>Tap the gantry, or press Space. Esc stands down without logging a time.</li>
-            <li>Tap while any red is still on and it is a jump start.</li>
-            <li>Qualifying is five attempts. The quickest clean start is pole.</li>
-            <li>Sprint is ten. Each jump adds 0.500s to the total.</li>
-            <li>Season is eight rounds of three starts against the same five drivers. Lowest total time wins the round, a jump adds 0.6 s, and points build a championship table. Win the Club title to unlock the Pro field.</li>
-            <li>Race is five starts against five AI drivers. Points for P1 to P6 are 25, 18, 15, 12, 10 and 8. A jump scores nothing.</li>
-            <li>The clock starts the frame the lights go dark. Records stay on this device.</li>
-            <li>Under 100 ms is not a reaction. It counts as a jump, same as the real thing.</li>
-            <li>Times include your screen and touch latency, so compare scores on the same device.</li>
-            <li>While the lights run, the whole screen is the trigger.</li>
-          </ul>
-          <div class="rules-actions">
-            <button type="button" class="chip" id="shake" data-control>Screen shake on</button>
-            <button type="button" class="chip" id="haptics" data-control>Haptics on</button>
-            <button type="button" class="chip" id="export" data-control>Export records</button>
-            <button type="button" class="chip" id="import" data-control>Import records</button>
-          </div>
-          <input type="file" id="importFile" accept="application/json,.json" hidden>
-          <p class="file-note" id="fileNote" role="status"></p>
-        </div>
-      </details>
     </section>
 
     <p class="install" id="install" hidden><span><strong>Install it:</strong> tap Share, then Add to Home Screen. Full screen, works offline, and your records stop expiring.</span><button type="button" id="installDismiss" data-control>Got it</button></p>
-    <p class="foot"><span class="desk">Space to go · Esc stands down</span><span class="phone">Tap the lights · early is a jump</span></p>
+    <p class="foot" id="foot"></p>
     <p class="sr-only" id="live" aria-live="polite"></p>
   </main>
+  <dialog class="sheet" id="sheet" data-control aria-label="Panel"></dialog>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
   <script>
     (() => {
       const SAVE_KEY = "lights-out.save.v1";
@@ -382,7 +371,7 @@
         practice: { label: "Practice", blurb: "Free runs. Chase a personal best.", runs: null, arm: 480, gap: 400, holdMin: 220, holdMax: 3000, penalty: 0 },
         qualifying: { label: "Qualifying", blurb: "Five starts. Your quickest clean one is pole.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
         sprint: { label: "Sprint", blurb: "Ten starts. Each jump adds half a second.", runs: 10, arm: 320, gap: 280, holdMin: 160, holdMax: 1100, penalty: 500 },
-        season: { label: "Season", blurb: "", runs: 3, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
+        season: { label: "Season", blurb: "Eight rounds against the same field. Win the title.", runs: 3, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
         race: { label: "Race", blurb: "Five starts against five AI drivers. Points for every position.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
       };
       // Fictional field, slowest last. Times are drawn fresh each start so no two races repeat.
@@ -399,6 +388,24 @@
       const SEASON = { rounds: 8, starts: 3, jumpMs: 600 };
       const TRACKS = ["Monaco", "Spa", "Monza", "Silverstone", "Circuit de Catalunya", "Imola", "Australia", "Interlagos"];
       const VIA = { keyboard: "Keyboard", mouse: "Mouse", touch: "Touch", pen: "Pen" };
+      const MODE_ORDER = ["practice", "qualifying", "sprint", "race", "season"];
+      const RULES = [
+        "Five pairs light left to right. When they all go dark, that is the start.",
+        "Tap the gantry, or press Space. Esc stands down without logging a time.",
+        "Tap while any red is still on and it is a jump start.",
+        "Under 100 ms is not a reaction. It counts as a jump, same as the real thing.",
+        "Qualifying is five attempts. The quickest clean start is pole.",
+        "Sprint is ten. Each jump adds 0.500 s to the total.",
+        "Race is five starts against five AI drivers. Points for P1 to P6 are 25, 18, 15, 12, 10 and 8. A jump scores nothing.",
+        "Season is eight rounds of three starts against the same five drivers. Lowest total time wins the round, a jump adds 0.6 s, and points build a championship table. Win the Club title to unlock the Pro field.",
+        "The clock starts the frame the lights go dark. Records stay on this device.",
+        "Times include your screen and touch latency, so compare scores on the same device.",
+        "While the lights run, the whole screen is the trigger.",
+      ];
+      const ICON = {
+        close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+        back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>',
+      };
 
       const $ = (id) => document.getElementById(id);
       const bulbs = [...document.querySelectorAll(".pair")];
@@ -503,7 +510,7 @@
       }
 
       function defaultSave() {
-        return { version: 1, bestMs: null, bestStreak: 0, runs: [], logged: 0, records: { qualifying: null, sprint: null, race: null }, session: [], tipDismissed: false, sound: true, shake: true, haptics: true, mode: "practice", champ: newSeason("club"), titles: { club: 0, pro: 0 }, proUnlocked: false, seasonTier: "club" };
+        return { version: 1, bestMs: null, bestStreak: 0, runs: [], logged: 0, records: { qualifying: null, sprint: null, race: null }, session: [], tipDismissed: false, sound: true, shake: true, haptics: true, mode: "practice", champ: newSeason("club"), seasons: [], titles: { club: 0, pro: 0 }, proUnlocked: false, seasonTier: "club" };
       }
       function bestMsOf(runs) {
         let best = null;
@@ -550,7 +557,7 @@
 
       // ---- Season (championship) ----
       function newSeason(tier) {
-        return { tier, round: 0, standings: Object.fromEntries(DRIVERS.map((name) => [name, 0])), results: [], complete: false };
+        return { tier, at: Date.now(), endedAt: null, round: 0, standings: Object.fromEntries(DRIVERS.map((name) => [name, 0])), results: [], complete: false };
       }
       // The field speeds up 1.5% a round; Pro starts 10% quicker than Club.
       function seasonFactor(champ) { return (champ.tier === "pro" ? 0.9 : 1) - champ.round * 0.015; }
@@ -569,31 +576,81 @@
         rows.sort((a, b) => a.ms - b.ms || (a.you ? 1 : b.you ? -1 : 0));
         rows.forEach((row, index) => { row.points = POINTS[index]; champ.standings[row.name] += row.points; });
         const pos = rows.findIndex((row) => row.you) + 1;
-        champ.results.push({ pos, order: rows.map((row) => row.name), totals: rows.map((row) => row.ms) });
         const track = TRACKS[champ.round];
+        // Everything the round card and the season review need to show this round again later.
+        champ.results.push({
+          track, at: Date.now(), pos, points: POINTS[pos - 1],
+          order: rows.map((row) => row.name), totals: rows.map((row) => row.ms),
+          starts: session.map((run) => (run.fault || run.ms == null ? null : run.ms)), total: roundTotal(session),
+        });
         champ.round += 1;
         let champion = null;
         let title = false;
         if (champ.round >= SEASON.rounds) {
           champ.complete = true;
+          champ.endedAt = Date.now();
           champion = standingsOrder(champ)[0];
           if (champion === "You") {
             title = true;
             save.titles[champ.tier] += 1;
             if (champ.tier === "club" && !save.proUnlocked) { save.proUnlocked = true; save.seasonTier = "pro"; }
           }
+          save.seasons = [JSON.parse(JSON.stringify(champ)), ...save.seasons].slice(0, 12);
         }
-        return { track, rows, pos, points: POINTS[pos - 1], seasonDone: champ.complete, champion, title, tier: champ.tier };
+        return { track, rows, pos, points: POINTS[pos - 1], seasonDone: champ.complete, champion, title, tier: champ.tier, index: champ.round - 1 };
       }
       function sanitizeChamp(c) {
         if (!c || typeof c !== "object") return newSeason("club");
         const season = newSeason(c.tier === "pro" ? "pro" : "club");
-        season.results = Array.isArray(c.results) ? c.results.filter((r) => r && typeof r.pos === "number" && Array.isArray(r.order)).slice(0, SEASON.rounds) : [];
+        const stamp = (value) => (typeof value === "number" && value > 0 ? value : null);
+        season.at = stamp(c.at);
+        season.endedAt = stamp(c.endedAt);
+        // Rounds saved before per-start times were kept load with empty starts, so they show "—" for those.
+        season.results = (Array.isArray(c.results) ? c.results : [])
+          .filter((r) => r && typeof r.pos === "number" && Array.isArray(r.order) && r.order.length === DRIVERS.length)
+          .slice(0, SEASON.rounds)
+          .map((r, i) => {
+            const pos = Math.min(DRIVERS.length, Math.max(1, Math.round(r.pos)));
+            const totals = Array.isArray(r.totals) && r.totals.length === DRIVERS.length ? r.totals.map((n) => (typeof n === "number" ? Math.round(n) : 0)) : DRIVERS.map(() => 0);
+            const starts = Array.isArray(r.starts) ? r.starts.slice(0, SEASON.starts).map((ms) => (typeof ms === "number" && ms >= 0 ? Math.round(ms) : null)) : [];
+            const you = r.order.indexOf("You");
+            return {
+              track: typeof r.track === "string" ? r.track : TRACKS[i], at: stamp(r.at), pos, points: POINTS[pos - 1],
+              order: r.order.map(String), totals, starts,
+              total: typeof r.total === "number" ? Math.round(r.total) : you >= 0 ? totals[you] : 0,
+            };
+          });
         season.round = season.results.length;
         for (const name of DRIVERS) season.standings[name] = c.standings && typeof c.standings[name] === "number" ? Math.max(0, Math.round(c.standings[name])) : 0;
         season.complete = season.round >= SEASON.rounds;
         return season;
       }
+      function roundStats(result) {
+        const starts = result.starts || [];
+        const clean = starts.filter((ms) => ms != null);
+        return { avg: mean(clean), best: clean.length ? Math.min(...clean) : null, jumps: starts.length - clean.length, known: starts.length > 0 };
+      }
+      function seasonStats(season) {
+        const starts = season.results.flatMap((r) => r.starts || []);
+        const clean = starts.filter((ms) => ms != null);
+        return {
+          avg: mean(clean), best: clean.length ? Math.min(...clean) : null, jumps: starts.length - clean.length,
+          wins: season.results.filter((r) => r.pos === 1).length, podiums: season.results.filter((r) => r.pos <= 3).length,
+        };
+      }
+      // Championship table as it stood after round `index` (0-based), rebuilt from the round orders.
+      function standingsAfter(results, index) {
+        const points = Object.fromEntries(DRIVERS.map((name) => [name, 0]));
+        for (let i = 0; i <= index; i += 1) results[i].order.forEach((name, p) => { if (name in points) points[name] += POINTS[p]; });
+        const wins = (name) => results.slice(0, index + 1).filter((r) => r.order[0] === name).length;
+        return DRIVERS.slice().sort((a, b) => points[b] - points[a] || wins(b) - wins(a)).map((name) => ({ name, points: points[name] }));
+      }
+      function fmtDate(at) {
+        if (!at) return "";
+        try { return new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch { return ""; }
+      }
+      function seconds(ms) { return (ms / 1000).toFixed(3) + " s"; }
+      function tierName(season) { return season.tier === "pro" ? "Pro" : "Club"; }
       function formatMs(ms) { return ms == null ? "—" : ms + " ms"; }
       function band(ms) {
         if (ms < 120) return { name: "Elite", hint: "Top of the human range." };
@@ -631,6 +688,7 @@
           haptics: typeof parsed.haptics === "boolean" ? parsed.haptics : true,
           mode,
           champ: sanitizeChamp(parsed.champ),
+          seasons: Array.isArray(parsed.seasons) ? parsed.seasons.map(sanitizeChamp).filter((season) => season.complete).slice(0, 12) : [],
           titles: { club: num(parsed.titles && parsed.titles.club) || 0, pro: num(parsed.titles && parsed.titles.pro) || 0 },
           proUnlocked: parsed.proUnlocked === true,
           seasonTier: parsed.proUnlocked === true && parsed.seasonTier === "pro" ? "pro" : "club",
@@ -844,11 +902,11 @@
         $("hint").textContent = view.hint;
         $("via").textContent = view.via || "";
         $("play").setAttribute("aria-label", view.aria);
-        $("dossier").textContent = dossier();
+        $("modeName").textContent = MODES[save.mode].label;
         $("blurb").textContent = save.mode === "season"
-          ? (save.champ.complete ? "Season over. Tap the gantry for a new one." : "Round " + (save.champ.round + 1) + " · " + TRACKS[save.champ.round] + " · " + (save.champ.tier === "pro" ? "Pro" : "Club") + " field")
+          ? (save.champ.complete ? "Season over. Tap the gantry for a new one." : "Round " + (save.champ.round + 1) + " · " + TRACKS[save.champ.round] + " · " + tierName(save.champ) + " field")
           : MODES[save.mode].blurb;
-        document.querySelectorAll("[data-mode]").forEach((button) => button.setAttribute("aria-selected", String(button.dataset.mode === save.mode)));
+        $("foot").textContent = save.logged ? dossier() : (matchMedia("(hover: hover) and (pointer: fine)").matches ? "Space to go · Esc stands down" : "Tap the lights · early is a jump");
 
         const readout = $("readout");
         readout.replaceChildren();
@@ -887,16 +945,8 @@
         sound.setAttribute("aria-label", save.sound ? "Mute sound" : "Unmute sound");
         sound.querySelector(".icon-on").hidden = !save.sound;
         sound.querySelector(".icon-off").hidden = save.sound;
-        $("reset").hidden = resetArmed;
-        $("confirm").hidden = !resetArmed;
-        $("reset").disabled = !(save.logged || save.runs.length || save.bestMs != null || save.bestStreak > 0 || save.records.qualifying != null || save.records.sprint != null || save.records.race != null || save.champ.round > 0);
-        const shake = $("shake");
-        shake.setAttribute("aria-pressed", String(save.shake));
-        shake.textContent = "Screen shake " + (save.shake ? "on" : "off");
-        const haptics = $("haptics");
-        haptics.setAttribute("aria-pressed", String(save.haptics));
-        haptics.textContent = "Haptics " + (save.haptics ? "on" : "off");
         $("install").hidden = !(isIOS() && !isStandalone() && !save.tipDismissed);
+        if (sheet.open) renderSheet();
         if (view.announcement && view.announcement !== announced) {
           announced = view.announcement;
           $("live").textContent = view.announcement;
@@ -1012,31 +1062,20 @@
       }
       function renderSeasonBottom(board) {
         const champ = save.champ;
-        const cal = document.createElement("ol");
-        cal.className = "calendar";
-        cal.setAttribute("aria-label", "Your finish in each round");
-        for (let i = 0; i < SEASON.rounds; i += 1) {
-          const result = champ.results[i];
-          const item = document.createElement("li");
-          item.className = "cal" + (result && result.pos === 1 ? " is-win" : "") + (!champ.complete && i === champ.round ? " is-current" : "");
-          item.title = TRACKS[i];
-          const value = document.createElement("b");
-          value.textContent = result ? "P" + result.pos : "—";
-          item.append("R" + (i + 1), value);
-          cal.append(item);
-        }
-        board.append(cal);
+        board.append(calendar(champ, !champ.complete ? champ.round : -1));
         const order = standingsOrder(champ);
-        board.append(table("Championship · " + (champ.tier === "pro" ? "Pro" : "Club") + " field", order.map((name) => ({ name, value: champ.standings[name] + " pts", you: name === "You" })), false));
-        const meta = document.createElement("div");
-        meta.className = "season-meta";
-        const titles = document.createElement("span");
-        titles.textContent = "Titles · Club " + save.titles.club + " · Pro " + save.titles.pro;
-        const chip = document.createElement("button");
+        board.append(table("Championship · " + tierName(champ) + " field", order.map((name) => ({ name, value: champ.standings[name] + " pts", you: name === "You" })), false));
+        const meta = el("div", "season-meta");
+        meta.append(el("span", null, "Titles · Club " + save.titles.club + " · Pro " + save.titles.pro));
+        const actions = el("div", "actions");
+        const review = el("button", "chip", "Review");
+        review.type = "button";
+        review.dataset.control = "";
+        review.setAttribute("aria-label", "Review this season and past seasons");
+        review.addEventListener("click", () => openSheet({ kind: "season", season: save.champ }));
+        const chip = el("button", "chip", save.proUnlocked ? "Next: " + (save.seasonTier === "pro" ? "Pro" : "Club") : "Pro locked");
         chip.type = "button";
-        chip.className = "chip";
         chip.dataset.control = "";
-        chip.textContent = save.proUnlocked ? "Next: " + (save.seasonTier === "pro" ? "Pro" : "Club") : "Pro locked";
         chip.disabled = !save.proUnlocked;
         chip.setAttribute("aria-label", save.proUnlocked ? "Switch the field for the next season" : "Win the Club title to unlock the Pro field");
         chip.addEventListener("click", () => {
@@ -1045,8 +1084,268 @@
           persist();
           render();
         });
-        meta.append(titles, chip);
+        actions.append(review, chip);
+        meta.append(actions);
         board.append(meta);
+      }
+
+      function el(tag, cls, text) {
+        const node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+      // R1–R8 strip. Completed rounds are buttons that reopen that round's card.
+      function calendar(season, currentIndex) {
+        const cal = el("div", "calendar");
+        cal.setAttribute("role", "group");
+        cal.setAttribute("aria-label", "Your finish in each round");
+        for (let i = 0; i < SEASON.rounds; i += 1) {
+          const result = season.results[i];
+          const item = el("button", "cal" + (result && result.pos === 1 ? " is-win" : "") + (i === currentIndex ? " is-current" : ""));
+          item.type = "button";
+          item.dataset.control = "";
+          item.title = TRACKS[i];
+          item.setAttribute("aria-label", "Round " + (i + 1) + ", " + TRACKS[i] + (result ? ", finished P" + result.pos : ", not run yet"));
+          item.append("R" + (i + 1), el("b", null, result ? "P" + result.pos : "—"));
+          if (result) item.addEventListener("click", () => openSheet({ kind: "round", season, index: i }, true));
+          else item.disabled = true;
+          cal.append(item);
+        }
+        return cal;
+      }
+
+      // ---- Sheet: mode picker, settings, round card, season review ----
+      const sheet = $("sheet");
+      let sheetView = null;
+      let sheetStack = [];
+      let fileNote = "";
+      function openSheet(view, push) {
+        if (push && sheetView) sheetStack.push(sheetView);
+        else sheetStack = [];
+        sheetView = view;
+        renderSheet();
+        if (!sheet.open) {
+          try { sheet.showModal(); } catch { sheet.setAttribute("open", ""); }
+        }
+        const body = sheet.querySelector(".sheet-body");
+        if (body) body.scrollTop = 0;
+      }
+      function closeSheet() {
+        sheetStack = [];
+        sheetView = null;
+        if (sheet.open) sheet.close();
+      }
+      function backSheet() {
+        if (sheetStack.length) { sheetView = sheetStack.pop(); renderSheet(); }
+        else closeSheet();
+      }
+      sheet.addEventListener("click", (event) => { if (event.target === sheet) closeSheet(); });
+      sheet.addEventListener("cancel", (event) => { event.preventDefault(); backSheet(); });
+      sheet.addEventListener("close", () => { sheetView = null; sheetStack = []; resetArmed = false; });
+      function sheetTitle(view) {
+        if (view.kind === "modes") return "Mode";
+        if (view.kind === "settings") return "Settings";
+        if (view.kind === "round") return "Round " + (view.index + 1) + " of " + SEASON.rounds;
+        return tierName(view.season) + " season";
+      }
+      function renderSheet() {
+        sheet.replaceChildren();
+        if (!sheetView) return;
+        const view = sheetView;
+        const head = el("div", "sheet-head");
+        const back = sheetStack.length > 0;
+        const dismiss = el("button", "icon-btn");
+        dismiss.type = "button";
+        dismiss.setAttribute("aria-label", back ? "Back" : "Close");
+        dismiss.innerHTML = back ? ICON.back : ICON.close;
+        dismiss.addEventListener("click", backSheet);
+        head.append(el("h2", "sheet-title", sheetTitle(view)), dismiss);
+        const body = el("div", "sheet-body");
+        if (view.kind === "modes") renderModes(body);
+        else if (view.kind === "settings") renderSettings(body);
+        else if (view.kind === "round") renderRoundCard(body, view);
+        else if (view.kind === "season") renderSeasonCard(body, view);
+        sheet.append(el("div", "sheet-grip"), head, body);
+        sheet.setAttribute("aria-label", sheetTitle(view));
+      }
+      function modeBest(key) {
+        if (key === "practice") return save.bestMs == null ? "No time yet" : "Best " + save.bestMs + " ms";
+        if (key === "qualifying") return save.records.qualifying == null ? "No pole yet" : "Best pole " + save.records.qualifying + " ms";
+        if (key === "sprint") return save.records.sprint == null ? "No total yet" : "Best " + seconds(save.records.sprint);
+        if (key === "race") return save.records.race == null ? "No score yet" : "Best " + save.records.race + " pts";
+        const champ = save.champ;
+        if (champ.round > 0 && !champ.complete) return "Round " + (champ.round + 1) + " of " + SEASON.rounds + " · P" + (standingsOrder(champ).indexOf("You") + 1);
+        return save.titles.club + save.titles.pro ? "Club " + save.titles.club + " · Pro " + save.titles.pro : "No titles yet";
+      }
+      function renderModes(body) {
+        for (const key of MODE_ORDER) {
+          const card = el("button", "mode-card");
+          card.type = "button";
+          card.setAttribute("aria-pressed", String(key === save.mode));
+          card.append(el("b", null, MODES[key].label), el("small", null, MODES[key].blurb), el("span", "best", modeBest(key)));
+          card.addEventListener("click", () => { selectMode(key); closeSheet(); });
+          body.append(card);
+        }
+      }
+      function toggleRow(label, on, onClick) {
+        const row = el("div", "setting");
+        const chip = el("button", "chip", on ? "On" : "Off");
+        chip.type = "button";
+        chip.setAttribute("aria-pressed", String(on));
+        chip.setAttribute("aria-label", label);
+        chip.addEventListener("click", onClick);
+        row.append(el("span", null, label), chip);
+        return row;
+      }
+      function hasRecords() {
+        return Boolean(save.logged || save.runs.length || save.bestMs != null || save.bestStreak > 0 || save.records.qualifying != null || save.records.sprint != null || save.records.race != null || save.champ.round > 0 || save.seasons.length);
+      }
+      function renderSettings(body) {
+        body.append(
+          toggleRow("Sound", save.sound, () => { unlockAudio(); save.sound = !save.sound; setMuted(!save.sound); persist(); render(); }),
+          toggleRow("Haptics", save.haptics, () => { save.haptics = !save.haptics; persist(); render(); haptic(1); }),
+          toggleRow("Screen shake", save.shake, () => { save.shake = !save.shake; persist(); render(); }),
+        );
+        const records = el("div", "setting");
+        const actions = el("div", "setting-actions");
+        const exportBtn = el("button", "chip", "Export");
+        exportBtn.type = "button";
+        exportBtn.addEventListener("click", exportRecords);
+        const importBtn = el("button", "chip", "Import");
+        importBtn.type = "button";
+        importBtn.addEventListener("click", () => $("importFile").click());
+        const resetBtn = el("button", "chip" + (resetArmed ? " is-danger" : ""), resetArmed ? "Confirm reset" : "Reset");
+        resetBtn.type = "button";
+        resetBtn.disabled = !hasRecords();
+        resetBtn.addEventListener("click", resetArmed ? confirmReset : armReset);
+        actions.append(exportBtn, importBtn, resetBtn);
+        records.append(el("span", null, "Records"), actions);
+        body.append(records);
+        if (fileNote) body.append(el("p", "file-note", fileNote));
+        body.append(el("p", "about", dossier()));
+        if (isIOS() && !isStandalone()) body.append(el("p", "about", "Add to Home Screen from Safari's Share menu for full screen, offline play, and records that stop expiring."));
+        const rules = el("div", "rules-list");
+        const list = el("ul");
+        for (const rule of RULES) list.append(el("li", null, rule));
+        rules.append(el("div", "board-label", "Rules and feel"), list);
+        body.append(rules);
+      }
+      function startsStrip(result) {
+        const strip = el("ol", "session cols-4");
+        strip.setAttribute("aria-label", "Your three starts and their average");
+        const starts = result.starts && result.starts.length ? result.starts : Array.from({ length: SEASON.starts }, () => undefined);
+        const stats = roundStats(result);
+        starts.forEach((ms, i) => {
+          const item = el("li", "cell" + (ms != null && ms === stats.best ? " is-best" : ""));
+          const value = el("div", "cell-value" + (ms === null ? " tone-fault" : ms != null && ms === stats.best ? " tone-go" : ""), ms === undefined ? "—" : ms === null ? "FS" : String(ms));
+          item.append(el("div", "cell-label", "S" + (i + 1)), value);
+          strip.append(item);
+        });
+        const avg = el("li", "cell is-avg");
+        avg.append(el("div", "cell-label", "Avg"), el("div", "cell-value", stats.avg == null ? "—" : String(stats.avg)));
+        strip.append(avg);
+        return strip;
+      }
+      function renderRoundCard(body, view) {
+        const season = view.season;
+        const result = season.results[view.index];
+        if (!result) { body.append(el("p", "empty", "That round has not been run yet.")); return; }
+        const head = el("div", "card-head");
+        head.append(el("span", null, tierName(season) + " field"), el("span", null, fmtDate(result.at)));
+        const sub = el("p", "card-sub");
+        sub.append(el("span", result.pos === 1 ? "tone-go" : result.pos <= 3 ? "tone-go" : "tone-ink", result.pos === 1 ? "Round win" : "P" + result.pos), " · +" + result.points + " pts · " + seconds(result.total));
+        body.append(head, el("p", "card-title", result.track), sub);
+        body.append(el("div", "board-label", "Your starts · ms"), startsStrip(result));
+        body.append(table("Round result", result.order.map((name, i) => ({ name, value: seconds(result.totals[i]), extra: "+" + POINTS[i], you: name === "You" })), true));
+        body.append(table("Standings after round " + (view.index + 1), standingsAfter(season.results, view.index).map((row) => ({ name: row.name, value: row.points + " pts", you: row.name === "You" })), false));
+        const foot = el("div", "card-foot");
+        foot.append(el("span", null, "Lights Out"), el("span", null, "Round " + (view.index + 1) + " / " + SEASON.rounds));
+        body.append(foot);
+        if (view.live) {
+          const next = el("button", "chip is-primary", season.complete ? "Season summary" : "Continue");
+          next.type = "button";
+          next.addEventListener("click", () => (season.complete ? openSheet({ kind: "season", season, live: true }) : closeSheet()));
+          body.append(next);
+        }
+      }
+      function statTile(label, value, tone) {
+        const card = el("div", "stat");
+        card.append(el("div", "stat-label", label), el("div", "stat-value tone-" + (tone || "ink"), value));
+        return card;
+      }
+      function renderSeasonCard(body, view) {
+        const season = view.season;
+        const order = standingsOrder(season);
+        const place = order.indexOf("You") + 1;
+        const stats = seasonStats(season);
+        const head = el("div", "card-head");
+        const first = season.results[0];
+        const lastRound = season.results[season.results.length - 1];
+        const span = first && lastRound && first.at && lastRound.at ? (fmtDate(first.at) === fmtDate(lastRound.at) ? fmtDate(first.at) : fmtDate(first.at) + " – " + fmtDate(lastRound.at)) : fmtDate(season.at);
+        head.append(el("span", null, tierName(season) + " field · " + season.round + " / " + SEASON.rounds + " rounds"), el("span", null, span));
+        const title = season.complete ? (order[0] === "You" ? "Champion" : "P" + place + " overall") : season.round > 0 ? "P" + place + " after round " + season.round : "Not started";
+        body.append(head, el("p", "card-title", title), el("p", "card-sub", season.standings.You + " pts" + (season.complete && order[0] !== "You" ? " · " + order[0] + " took the title" : "")));
+        const tiles = el("div", "stats");
+        tiles.append(
+          statTile("Avg start", formatMs(stats.avg), "ink"),
+          statTile("Best start", formatMs(stats.best), stats.best == null ? "ink" : "go"),
+          statTile("Jumps", String(stats.jumps), stats.jumps ? "fault" : "ink"),
+          statTile("Wins", String(stats.wins), stats.wins ? "go" : "ink"),
+          statTile("Podiums", String(stats.podiums), "ink"),
+          statTile("Points", String(season.standings.You), season.standings.You ? "go" : "ink"),
+        );
+        body.append(tiles);
+        body.append(el("div", "board-label", "Rounds · total and average start"));
+        if (!season.results.length) body.append(el("p", "empty", "No rounds run yet."));
+        else {
+          const list = el("ol", "grid-list");
+          season.results.forEach((result, i) => {
+            const item = el("li");
+            const row = el("button", "grid-row is-log" + (result.pos === 1 ? " is-win" : ""));
+            row.type = "button";
+            const rs = roundStats(result);
+            row.append(el("span", "grid-pos", "R" + (i + 1)), el("span", "grid-name", result.track), el("span", result.pos === 1 ? "tone-go" : "", "P" + result.pos), el("span", "grid-time", seconds(result.total)), el("span", "grid-extra", rs.avg == null ? "—" : "avg " + rs.avg));
+            row.setAttribute("aria-label", "Round " + (i + 1) + ", " + result.track + ", P" + result.pos + ", total " + seconds(result.total) + (rs.avg == null ? "" : ", average start " + rs.avg + " milliseconds"));
+            row.addEventListener("click", () => openSheet({ kind: "round", season, index: i }, true));
+            item.append(row);
+            list.append(item);
+          });
+          body.append(list);
+        }
+        body.append(table("Championship", order.map((name) => ({ name, value: season.standings[name] + " pts", you: name === "You" })), false));
+        if (season === save.champ) {
+          // A finished season is archived the moment it ends, so leave the current one out of its own history.
+          const pastSeasons = save.seasons.filter((past) => !(season.complete && past.at === season.at && past.endedAt === season.endedAt));
+          body.append(el("div", "board-label", "Past seasons"));
+          if (!pastSeasons.length) body.append(el("p", "empty", "Completed seasons are kept here."));
+          else {
+            const list = el("ol", "grid-list");
+            pastSeasons.forEach((past) => {
+              const pastOrder = standingsOrder(past);
+              const pastPlace = pastOrder.indexOf("You") + 1;
+              const ps = seasonStats(past);
+              const item = el("li");
+              const row = el("button", "grid-row is-log" + (pastPlace === 1 ? " is-win" : ""));
+              row.type = "button";
+              row.append(el("span", "grid-pos", tierName(past).slice(0, 1)), el("span", "grid-name", fmtDate(past.endedAt || past.at) || tierName(past)), el("span", pastPlace === 1 ? "tone-go" : "", pastPlace === 1 ? "Champion" : "P" + pastPlace), el("span", "grid-time", past.standings.You + " pts"), el("span", "grid-extra", ps.avg == null ? "—" : "avg " + ps.avg));
+              row.setAttribute("aria-label", tierName(past) + " season, " + (pastPlace === 1 ? "champion" : "P" + pastPlace) + ", " + past.standings.You + " points");
+              row.addEventListener("click", () => openSheet({ kind: "season", season: past }, true));
+              item.append(row);
+              list.append(item);
+            });
+            body.append(list);
+          }
+        }
+        const foot = el("div", "card-foot");
+        foot.append(el("span", null, "Lights Out"), el("span", null, tierName(season) + " season"));
+        body.append(foot);
+        if (view.live) {
+          const next = el("button", "chip is-primary", "Done");
+          next.type = "button";
+          next.addEventListener("click", closeSheet);
+          body.append(next);
+        }
       }
 
       function settleSession() {
@@ -1156,6 +1455,7 @@
         triggerShake();
         triggerFlash("fault");
         render();
+        presentRound();
       }
       function finishTime(ms, input) {
         const isNew = save.bestMs == null || ms < save.bestMs;
@@ -1168,6 +1468,14 @@
         if (isNew || record || (last.round && last.round.pos === 1)) { haptic(3); playBest(); triggerShake(); triggerFlash("best"); }
         else { haptic(1); playLock(); }
         render();
+        presentRound();
+      }
+      // A finished Season round gets its own card: the result, your starts, and the table as it now stands.
+      function presentRound() {
+        if (!last || !last.round) return;
+        window.setTimeout(() => {
+          if (last && last.round && sim.phase === "result") openSheet({ kind: "round", season: save.champ, index: last.round.index, live: true });
+        }, 650);
       }
       let askedPersist = false;
       function requestPersistentStorage() {
@@ -1192,21 +1500,20 @@
         begin(now);
       }
 
-      document.querySelectorAll("[data-mode]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const next = button.dataset.mode;
-          if (!next || next === save.mode) return;
-          clearTimers();
-          sim.phase = "idle";
-          sim.lit = 0;
-          last = null;
-          flash = null;
-          session = [];
-          save.mode = next;
-          persist();
-          render();
-        });
-      });
+      function selectMode(next) {
+        if (!MODES[next] || next === save.mode) return;
+        clearTimers();
+        sim.phase = "idle";
+        sim.lit = 0;
+        last = null;
+        flash = null;
+        session = [];
+        save.mode = next;
+        persist();
+        render();
+      }
+      $("modeBtn").addEventListener("click", () => openSheet({ kind: "modes" }));
+      $("settings").addEventListener("click", () => openSheet({ kind: "settings" }));
       // While the lights run the whole screen is the trigger (controls go inert via .is-playing).
       // Otherwise only the play surface arms a start, so scrolling and the controls keep working.
       document.addEventListener("pointerdown", (event) => {
@@ -1222,12 +1529,10 @@
       document.addEventListener("click", primeAudio);
       $("play").addEventListener("contextmenu", (event) => event.preventDefault());
       $("sound").addEventListener("click", () => { unlockAudio(); save.sound = !save.sound; setMuted(!save.sound); persist(); render(); });
-      $("shake").addEventListener("click", () => { save.shake = !save.shake; persist(); render(); });
-      $("haptics").addEventListener("click", () => { save.haptics = !save.haptics; persist(); render(); haptic(1); });
       $("installDismiss").addEventListener("click", () => { save.tipDismissed = true; persist(); render(); });
 
-      function note(text) { $("fileNote").textContent = text; }
-      $("export").addEventListener("click", async () => {
+      function note(text) { fileNote = text; if (sheet.open) renderSheet(); }
+      async function exportRecords() {
         const body = JSON.stringify({ app: "lights-out", exportedAt: new Date().toISOString(), data: save }, null, 2);
         const name = "lights-out-records.json";
         try {
@@ -1249,8 +1554,7 @@
         } catch (error) {
           if (!error || error.name !== "AbortError") note("Could not export records.");
         }
-      });
-      $("import").addEventListener("click", () => $("importFile").click());
+      }
       $("importFile").addEventListener("change", async (event) => {
         const file = event.target.files && event.target.files[0];
         event.target.value = "";
@@ -1276,13 +1580,14 @@
           note("That file is not a Lights Out export.");
         }
       });
-      $("reset").addEventListener("click", () => {
+      function armReset() {
         resetArmed = true;
         clearTimeout(resetTimer);
-        resetTimer = setTimeout(() => { resetArmed = false; render(); }, 2500);
-        render();
-      });
-      $("confirm").addEventListener("click", () => {
+        resetTimer = setTimeout(() => { resetArmed = false; if (sheet.open) renderSheet(); }, 3000);
+        renderSheet();
+      }
+      function confirmReset() {
+        clearTimeout(resetTimer);
         clearTimers();
         const sound = save.sound;
         const shake = save.shake;
@@ -1302,10 +1607,11 @@
         sim.lit = 0;
         resetArmed = false;
         persist();
+        note("Records cleared.");
         render();
-      });
+      }
       window.addEventListener("keydown", (event) => {
-        if (event.repeat) return;
+        if (event.repeat || sheet.open) return;
         if (event.key === "Escape") { event.preventDefault(); standDown(); return; }
         if (event.key !== " " && event.key !== "Enter") return;
         if (event.target instanceof Element && event.target.closest("[data-control]")) return;
