@@ -13,7 +13,7 @@ Plain HTML/CSS/JS, no build step, installable on iOS and Android as a PWA.
 
 After every Season round a card shows your three starts with their average, the round result and the standings. Tap any round in the R1–R8 strip to reopen its card, or **Review** for season stats (average and best start, jumps, wins, podiums), a per-round log and your past seasons.
 
-A reaction under 100 ms counts as a jump (anticipation), as in real starts.
+Anticipating the lights is allowed: a tap of 15 ms or more after they go dark counts. Any earlier is a jump start, so guessing is high risk, high reward.
 
 ## Run locally
 

@@ -366,7 +366,7 @@
     (() => {
       const SAVE_KEY = "lights-out.save.v1";
       const MISS_MS = 8000;
-      const MIN_REACT_MS = 100;
+      const MIN_REACT_MS = 15;
       const MODES = {
         practice: { label: "Practice", blurb: "Free runs. Chase a personal best.", runs: null, arm: 480, gap: 400, holdMin: 220, holdMax: 3000, penalty: 0 },
         qualifying: { label: "Qualifying", blurb: "Five starts. Your quickest clean one is pole.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
@@ -393,7 +393,7 @@
         "Five pairs light left to right. When they all go dark, that is the start.",
         "Tap the gantry, or press Space. Esc stands down without logging a time.",
         "Tap while any red is still on and it is a jump start.",
-        "Under 100 ms is not a reaction. It counts as a jump, same as the real thing.",
+        "Anticipating the lights is allowed, but tap before they go dark and it is a jump. Under 15 ms counts as a jump too: high risk, high reward.",
         "Qualifying is five attempts. The quickest clean start is pole.",
         "Sprint is ten. Each jump adds 0.500 s to the total.",
         "Race is five starts against five AI drivers. Points for P1 to P6 are 25, 18, 15, 12, 10 and 8. A jump scores nothing.",
@@ -547,7 +547,7 @@
       }
       // Rank the player (ms, or null for a jump) against a fresh draw for each AI driver. Ties go to the AI.
       function runRace(ms, factor = 1) {
-        const ai = FIELD.map((d) => Math.max(MIN_REACT_MS + 10, Math.round(factor * (d.mean + d.sd * gaussian()))));
+        const ai = FIELD.map((d) => Math.max(120, Math.round(factor * (d.mean + d.sd * gaussian()))));
         const rows = FIELD.map((d, i) => ({ name: d.code, ms: ai[i], you: false }));
         rows.push({ name: "You", ms: ms == null ? Infinity : ms, you: true, fault: ms == null });
         rows.sort((a, b) => a.ms - b.ms);
@@ -827,7 +827,7 @@
           if (last.kind === "missed") return { ...shell, status: "Stood down", tone: "wait", readout: "—", word: true, hint: "No time logged. Tap to re-arm.", aria: "Stood down. Arm the start.", announcement: "Stood down. No time logged." };
           if (last.kind === "fault") {
             const anticipated = last.reason === "anticipated";
-            return { ...shell, status: "Jump start", tone: "fault", readout: "Fault", word: true, via: last.input ? VIA[last.input] : null, hint: anticipated ? "Under " + MIN_REACT_MS + " ms is guessing, not reacting. Tap to try again." : "Too early. Tap to try again.", aria: "Jump start. Try again.", announcement: anticipated ? "Jump start. Faster than a human reaction." : "Jump start.", highlight: "fault" };
+            return { ...shell, status: "Jump start", tone: "fault", readout: "Fault", word: true, via: last.input ? VIA[last.input] : null, hint: anticipated ? "Under " + MIN_REACT_MS + " ms. Too early, even for a guess. Tap to try again." : "Too early. Tap to try again.", aria: "Jump start. Try again.", announcement: anticipated ? "Jump start. Under " + MIN_REACT_MS + " milliseconds." : "Jump start.", highlight: "fault" };
           }
           const ms = last.ms || 0;
           const rating = band(ms);
