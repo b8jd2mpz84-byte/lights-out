@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lights Out</title>
+  <meta name="description" content="Formula start, stripped to the reflex. Darkness is the signal.">
+  <meta name="theme-color" content="#07080c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Lights Out">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="preload" href="fonts/Rajdhani-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/JetBrainsMono-var.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    @font-face { font-family: "Rajdhani"; font-weight: 500; font-style: normal; font-display: swap; src: url("fonts/Rajdhani-500.woff2") format("woff2"); }
+    @font-face { font-family: "Rajdhani"; font-weight: 600; font-style: normal; font-display: swap; src: url("fonts/Rajdhani-600.woff2") format("woff2"); }
+    @font-face { font-family: "Rajdhani"; font-weight: 700; font-style: normal; font-display: swap; src: url("fonts/Rajdhani-700.woff2") format("woff2"); }
+    @font-face { font-family: "JetBrains Mono"; font-weight: 500 700; font-style: normal; font-display: swap; src: url("fonts/JetBrainsMono-var.woff2") format("woff2"); }
+
+    :root {
+      --font-sans: "Rajdhani", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --color-canvas: #07080c;
+      --color-panel: #161a24;
+      --color-inset: #0d1017;
+      --color-ink: #e8ebf3;
+      --color-muted: #8e94a8;
+      --color-line: #2a3042;
+      --color-metal: #1a1f2b;
+      --color-bezel: #343b4e;
+      --color-signal: #ff2d2d;
+      --color-red-dim: #3a1418;
+      --color-go: #2fe88a;
+      --color-fault: #ffb020;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--color-canvas); }
+    html.is-playing, html.is-playing body { touch-action: none; overflow: hidden; }
+    html.is-playing [data-control] { pointer-events: none; }
+    html.is-playing .tools, html.is-playing .tabs, html.is-playing .blurb, html.is-playing .rules { opacity: 0.45; }
+    .tools, .tabs, .blurb, .rules { transition: opacity 120ms ease-out; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse 80% 42% at 50% -12%, color-mix(in srgb, var(--color-signal) 16%, transparent), transparent 62%),
+        var(--color-canvas);
+      color: var(--color-ink);
+      font-family: var(--font-sans);
+      font-weight: 600;
+      line-height: 1.45;
+      overscroll-behavior-y: none;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body * {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    button { font: inherit; color: inherit; }
+    button:not(:disabled) { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.4; }
+    :focus-visible { outline: 2px solid var(--color-go); outline-offset: 3px; }
+
+    .shell {
+      width: min(100%, 32rem);
+      margin: 0 auto;
+      display: flex;
+      min-height: 100dvh;
+      flex-direction: column;
+      justify-content: safe center;
+      gap: 0.85rem;
+      padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    }
+
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .eyebrow, .dossier, .foot, .kicker, .banner, .via, .stat-label, .board-label, .cell-label {
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--color-muted);
+    }
+    .eyebrow { margin: 0; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .tools { display: flex; align-items: center; gap: 0.5rem; }
+    .icon-btn, .confirm-btn {
+      display: grid;
+      place-items: center;
+      height: 2.75rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--color-line);
+      background: var(--color-inset);
+      color: var(--color-muted);
+    }
+    .icon-btn { width: 2.75rem; padding: 0; }
+    .icon-btn[aria-pressed="true"] { color: var(--color-ink); }
+    .icon-btn svg { width: 1.25rem; height: 1.25rem; }
+    .confirm-btn {
+      padding: 0 0.75rem;
+      border-color: var(--color-fault);
+      background: transparent;
+      color: var(--color-fault);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+    h1 { margin: 0.5rem 0 0; font-size: 2.25rem; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+    .lede { margin: 0.5rem 0 0; max-width: 24rem; font-size: 1rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
+    .dossier { margin: 0.25rem 0 0; font-size: 0.75rem; letter-spacing: 0.04em; }
+
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; border-radius: 0.75rem; background: var(--color-inset); padding: 0.25rem; }
+    .tabs button { min-width: 0; padding: 0 0.25rem; min-height: 2.75rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--color-muted); font-size: 0.875rem; font-weight: 600; }
+    .tabs button[aria-selected="true"] { background: var(--color-panel); color: var(--color-ink); font-weight: 700; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
+    .blurb { margin: -0.35rem 0 0; font-size: 0.875rem; font-weight: 500; color: var(--color-muted); }
+
+    .panel { overflow: hidden; border: 1px solid var(--color-line); border-radius: 1.25rem; background: var(--color-panel); box-shadow: 0 28px 60px -32px black; }
+    .play-surface { display: block; width: 100%; cursor: pointer; background: transparent; text-align: center; padding: 1rem 1rem 0.4rem; touch-action: none; }
+    .play-surface:active { background: color-mix(in srgb, white 3%, transparent); }
+    .play-surface:focus-visible { outline-offset: -6px; }
+
+    .gantry { position: relative; border-radius: 999px; }
+    .gantry-bar {
+      display: flex; align-items: center; gap: 0.65rem; padding: 0.8rem 0.85rem;
+      border: 1px solid var(--color-line); border-radius: 999px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--color-bezel) 72%, white), var(--color-metal) 46%, var(--color-inset));
+      box-shadow: inset 0 1px 0 color-mix(in srgb, white 16%, transparent);
+    }
+    .gantry.is-charged .gantry-bar { box-shadow: inset 0 1px 0 color-mix(in srgb, white 16%, transparent), 0 0 26px color-mix(in srgb, var(--color-signal) 32%, transparent); }
+    .pairs { display: flex; flex: 1; justify-content: space-between; gap: 0.4rem; }
+    .pair { display: flex; flex-direction: column; align-items: center; gap: 0.38rem; }
+    .bulb {
+      width: 1.65rem; height: 1.65rem; border-radius: 999px;
+      background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-signal) 30%, black), var(--color-red-dim) 54%, black 78%);
+      box-shadow: inset 0 -5px 7px black, 0 0 0 3px var(--color-bezel), 0 0 0 4px color-mix(in srgb, black 45%, var(--color-line));
+    }
+    .bulb.is-on {
+      background: radial-gradient(circle at 50% 36%, color-mix(in srgb, white 86%, var(--color-signal)), var(--color-signal) 40%, color-mix(in srgb, var(--color-signal) 42%, black));
+      box-shadow: inset 0 -5px 7px color-mix(in srgb, black 30%, transparent), 0 0 0 3px var(--color-bezel), 0 0 16px 2px color-mix(in srgb, var(--color-signal) 78%, transparent);
+      animation: lamp-in 90ms ease-out;
+    }
+    .rivet { width: 0.42rem; height: 0.42rem; flex: none; border-radius: 999px; background: radial-gradient(circle at 35% 35%, color-mix(in srgb, white 40%, var(--color-line)), var(--color-inset)); box-shadow: inset 0 1px 1px black; }
+    .led { height: 3px; margin: 0.7rem 1.2rem 0; border-radius: 999px; background: var(--color-red-dim); opacity: 0.5; }
+    .led.is-hot { background: var(--color-signal); opacity: 1; box-shadow: 0 0 12px var(--color-signal); }
+    .led.is-fault { background: var(--color-fault); opacity: 1; box-shadow: 0 0 12px var(--color-fault); }
+    .led.is-best { background: var(--color-go); opacity: 1; box-shadow: 0 0 12px var(--color-go); }
+    .grid-mark {
+      height: 1.85rem; margin: 0.8rem 0.2rem 0.15rem;
+      background: linear-gradient(var(--color-ink), var(--color-ink)) center / 100% 2px no-repeat, repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--color-ink) 75%, transparent) 15px 17px);
+      opacity: 0.28;
+      -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+      mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    }
+    .stage-copy { display: flex; min-height: 9.75rem; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; padding: 0.35rem 0.5rem 0.55rem; }
+    .kicker { margin: 0; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .status { margin: 0; font-size: 1.65rem; font-weight: 700; line-height: 1.1; }
+    .banner { min-height: 1rem; margin: 0.15rem 0 0; color: var(--color-go); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+    .readout { display: flex; align-items: baseline; justify-content: center; min-height: 3.6rem; margin: 0; }
+    .readout-num { font-family: var(--font-mono); font-size: clamp(2.7rem, 12vw, 3.6rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .readout-num.is-word { font-size: clamp(2.1rem, 9vw, 2.7rem); letter-spacing: 0.04em; }
+    .readout-unit { margin-left: 0.35rem; color: var(--color-muted); font-family: var(--font-mono); font-size: 0.95rem; font-weight: 500; }
+    .hint { max-width: 18rem; min-height: 2.4rem; margin: 0.1rem 0 0; color: var(--color-muted); font-size: 0.95rem; font-weight: 600; line-height: 1.35; }
+    .via { margin: 0; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .tone-go { color: var(--color-go); }
+    .tone-fault { color: var(--color-fault); }
+    .tone-wait { color: var(--color-muted); }
+    .tone-idle, .tone-ink { color: var(--color-ink); }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0 1rem 1rem; }
+    .stat { border-radius: 0.75rem; border: 1px solid var(--color-line); background: var(--color-inset); padding: 0.625rem 0.5rem; text-align: center; }
+    .stat-label { font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .stat-value { margin-top: 0.25rem; font-family: var(--font-mono); font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .history, .session-wrap { padding: 0 1rem 1rem; }
+    .board-label { margin: 0 0 0.5rem; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .bars { display: flex; align-items: flex-end; gap: 0.35rem; height: 4.5rem; }
+    .bars.is-empty { align-items: center; justify-content: center; border: 1px dashed var(--color-line); border-radius: 0.5rem; color: var(--color-muted); font-size: 0.875rem; }
+    .bar-wrap { display: flex; flex: 1; align-items: flex-end; height: 100%; }
+    .bar { width: 100%; min-height: 4px; border-radius: 0.2rem 0.2rem 0 0; background: var(--color-bezel); }
+    .bar.is-best { background: var(--color-go); }
+    .bar.is-fault { height: 100%; background: var(--color-fault); }
+    .session { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.375rem; list-style: none; margin: 0; padding: 0; }
+    .cell { border-radius: 0.5rem; border: 1px solid var(--color-line); background: var(--color-inset); padding: 0.5rem 0.25rem; text-align: center; }
+    .cell.is-best { border-color: var(--color-go); }
+    .cell.is-next, .cell.is-latest { border-color: var(--color-ink); }
+    .cell-label { font-size: 0.75rem; }
+    .cell-value { margin-top: 0.125rem; font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .rules { border-top: 1px solid var(--color-line); }
+    .rules summary { display: flex; min-height: 2.75rem; align-items: center; justify-content: space-between; padding: 0 1rem; font-size: 0.875rem; font-weight: 600; color: var(--color-muted); cursor: pointer; list-style: none; }
+    .rules summary::-webkit-details-marker { display: none; }
+    .rules-body { padding: 0 1rem 1rem; }
+    .rules ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .rules li { font-size: 0.875rem; line-height: 1.35; font-weight: 500; color: var(--color-muted); }
+    .chip { min-height: 2.75rem; margin-top: 0.75rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-inset); padding: 0.4rem 0.8rem; font-size: 0.92rem; }
+    .chip[aria-pressed="false"] { color: var(--color-muted); }
+    .grid-list { display: grid; gap: 0.25rem; margin: 0 0 0.75rem; padding: 0; list-style: none; font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .grid-row { display: grid; grid-template-columns: 2.2rem 1fr auto; gap: 0.5rem; padding: 0.35rem 0.65rem; border: 1px solid transparent; border-radius: 0.5rem; background: var(--color-inset); color: var(--color-muted); text-align: left; }
+    .grid-row.is-you { border-color: var(--color-ink); color: var(--color-ink); font-weight: 700; }
+    .grid-row.is-fault .grid-time { color: var(--color-fault); }
+    .grid-row.is-win .grid-pos { color: var(--color-go); }
+    .rules-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .rules-actions .chip { margin-top: 0.75rem; }
+    .file-note { min-height: 1.2rem; margin: 0.5rem 0 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+    .install { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0; padding: 0.6rem 0.75rem 0.6rem 1rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-inset); font-size: 0.875rem; font-weight: 500; line-height: 1.3; color: var(--color-muted); }
+    .install[hidden] { display: none; }
+    .install strong { color: var(--color-ink); font-weight: 700; }
+    .install button { flex: none; min-height: 2.75rem; padding: 0 0.85rem; border: 1px solid var(--color-line); border-radius: 0.6rem; background: transparent; color: var(--color-ink); font-size: 0.875rem; }
+    .foot { margin: 0; text-align: center; font-size: 0.75rem; letter-spacing: 0.04em; }
+    .desk { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @keyframes lamp-in { from { transform: scale(0.86); } to { transform: scale(1); } }
+    @keyframes tray {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-3px) rotate(-0.4deg); }
+      40% { transform: translateX(3px) rotate(0.4deg); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(1px); }
+    }
+    @keyframes wash { from { opacity: 0.9; } to { opacity: 0; } }
+    @keyframes pop-in { from { transform: scale(0.94); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+    .gantry.is-shaking { animation: tray 280ms ease-out; }
+    .gantry.is-fault::after, .gantry.is-best::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; animation: wash 420ms ease-out forwards;
+    }
+    .gantry.is-fault::after { background: color-mix(in srgb, var(--color-fault) 30%, transparent); }
+    .gantry.is-best::after { background: color-mix(in srgb, var(--color-go) 24%, transparent); }
+    .readout-pop { animation: pop-in 140ms ease-out; }
+
+    @media (min-width: 640px) {
+      .bulb { width: 2.05rem; height: 2.05rem; }
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .desk { display: inline; }
+      .phone { display: none; }
+    }
+    @media (orientation: landscape) and (max-height: 520px) {
+      .shell { width: min(100%, 64rem); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr); grid-template-rows: repeat(4, auto) 1fr; align-content: start; column-gap: 1.25rem; row-gap: 0.6rem; padding-top: max(0.75rem, env(safe-area-inset-top)); padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+      .shell > header { grid-column: 1; grid-row: 1; }
+      .shell > .tabs { grid-column: 1; grid-row: 2; }
+      .shell > .blurb { grid-column: 1; grid-row: 3; margin: 0; }
+      .shell > .install { grid-column: 1; grid-row: 4; }
+      .shell > .panel { grid-column: 2; grid-row: 1 / -1; align-self: start; }
+      .shell > .foot { grid-column: 1; grid-row: 5; align-self: start; text-align: left; }
+      h1 { font-size: 1.75rem; }
+      .lede { display: none; }
+      .play-surface { padding-top: 0.6rem; }
+      .grid-mark { display: none; }
+      .gantry-bar { padding: 0.55rem 0.7rem; }
+      .led { margin-top: 0.5rem; }
+      .stage-copy { min-height: 7.5rem; }
+      .readout { min-height: 3rem; }
+      .hint { min-height: 1.4rem; margin: 0; }
+      .stats { gap: 0.4rem; padding-bottom: 0.7rem; }
+      .stat { padding: 0.4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bulb.is-on, .gantry.is-shaking, .gantry.is-fault::after, .gantry.is-best::after, .readout-pop { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="top">
+        <p class="eyebrow">Reaction start</p>
+        <div class="tools">
+          <button type="button" class="icon-btn" id="sound" data-control aria-pressed="true" aria-label="Mute sound">
+            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="reset" data-control aria-label="Reset records">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button type="button" class="confirm-btn" id="confirm" data-control hidden>Confirm</button>
+        </div>
+      </div>
+      <h1>Lights Out</h1>
+      <p class="lede">Formula start, stripped to the reflex. Darkness is the signal.</p>
+      <p class="dossier" id="dossier"></p>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Session">
+      <button type="button" role="tab" data-control data-mode="practice">Practice</button>
+      <button type="button" role="tab" data-control data-mode="qualifying">Qualifying</button>
+      <button type="button" role="tab" data-control data-mode="sprint">Sprint</button>
+      <button type="button" role="tab" data-control data-mode="race">Race</button>
+    </div>
+    <p class="blurb" id="blurb"></p>
+
+    <section class="panel">
+      <div class="play-surface" id="play" role="button" tabindex="0" aria-label="Arm the start">
+        <div class="stage" aria-hidden="true">
+          <div class="gantry" id="gantry">
+            <div class="gantry-bar">
+              <span class="rivet"></span>
+              <div class="pairs">
+                <div class="pair"><span class="bulb"></span><span class="bulb"></span></div>
+                <div class="pair"><span class="bulb"></span><span class="bulb"></span></div>
+                <div class="pair"><span class="bulb"></span><span class="bulb"></span></div>
+                <div class="pair"><span class="bulb"></span><span class="bulb"></span></div>
+                <div class="pair"><span class="bulb"></span><span class="bulb"></span></div>
+              </div>
+              <span class="rivet"></span>
+            </div>
+            <div class="led" id="led"></div>
+          </div>
+          <div class="grid-mark"></div>
+          <div class="stage-copy">
+            <p class="kicker" id="kicker"></p>
+            <p class="status" id="status"></p>
+            <p class="banner" id="banner"></p>
+            <p class="readout" id="readout"></p>
+            <p class="hint" id="hint"></p>
+            <p class="via" id="via"></p>
+          </div>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div id="board"></div>
+      <details class="rules" data-control>
+        <summary>Rules and feel <span aria-hidden="true">+</span></summary>
+        <div class="rules-body">
+          <ul>
+            <li>Five pairs light left to right. When they all go dark, that is the start.</li>
+            <li>Tap the gantry, or press Space. Esc stands down without logging a time.</li>
+            <li>Tap while any red is still on and it is a jump start.</li>
+            <li>Qualifying is five attempts. The quickest clean start is pole.</li>
+            <li>Sprint is ten. Each jump adds 0.500s to the total.</li>
+            <li>Race is five starts against five AI drivers. Points for P1 to P6 are 25, 18, 15, 12, 10 and 8. A jump scores nothing.</li>
+            <li>The clock starts the frame the lights go dark. Records stay on this device.</li>
+            <li>Under 100 ms is not a reaction. It counts as a jump, same as the real thing.</li>
+            <li>Times include your screen and touch latency, so compare scores on the same device.</li>
+            <li>While the lights run, the whole screen is the trigger.</li>
+          </ul>
+          <div class="rules-actions">
+            <button type="button" class="chip" id="shake" data-control>Screen shake on</button>
+            <button type="button" class="chip" id="haptics" data-control>Haptics on</button>
+            <button type="button" class="chip" id="export" data-control>Export records</button>
+            <button type="button" class="chip" id="import" data-control>Import records</button>
+          </div>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+          <p class="file-note" id="fileNote" role="status"></p>
+        </div>
+      </details>
+    </section>
+
+    <p class="install" id="install" hidden><span><strong>Install it:</strong> tap Share, then Add to Home Screen. Full screen, works offline, and your records stop expiring.</span><button type="button" id="installDismiss" data-control>Got it</button></p>
+    <p class="foot"><span class="desk">Space to go · Esc stands down</span><span class="phone">Tap the lights · early is a jump</span></p>
+    <p class="sr-only" id="live" aria-live="polite"></p>
+  </main>
+  <script>
+    (() => {
+      const SAVE_KEY = "lights-out.save.v1";
+      const MISS_MS = 8000;
+      const MIN_REACT_MS = 100;
+      const MODES = {
+        practice: { label: "Practice", blurb: "Free runs. Chase a personal best.", runs: null, arm: 480, gap: 400, holdMin: 220, holdMax: 3000, penalty: 0 },
+        qualifying: { label: "Qualifying", blurb: "Five starts. Your quickest clean one is pole.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
+        sprint: { label: "Sprint", blurb: "Ten starts. Each jump adds half a second.", runs: 10, arm: 320, gap: 280, holdMin: 160, holdMax: 1100, penalty: 500 },
+        race: { label: "Race", blurb: "Five starts against five AI drivers. Points for every position.", runs: 5, arm: 480, gap: 400, holdMin: 200, holdMax: 3000, penalty: 0 },
+      };
+      // Fictional field, slowest last. Times are drawn fresh each start so no two races repeat.
+      const FIELD = [
+        { code: "APX", mean: 215, sd: 22 },
+        { code: "BRV", mean: 235, sd: 24 },
+        { code: "CLN", mean: 255, sd: 26 },
+        { code: "DRK", mean: 275, sd: 28 },
+        { code: "EVR", mean: 300, sd: 30 },
+      ];
+      const POINTS = [25, 18, 15, 12, 10, 8];
+      const VIA = { keyboard: "Keyboard", mouse: "Mouse", touch: "Touch", pen: "Pen" };
+
+      const $ = (id) => document.getElementById(id);
+      const bulbs = [...document.querySelectorAll(".pair")];
+
+      let ctx = null;
+      let master = null;
+      let muted = false;
+
+      function setMuted(next) {
+        muted = next;
+        if (ctx && master) master.gain.setTargetAtTime(next ? 0 : 0.42, ctx.currentTime, 0.02);
+      }
+      let primed = false;
+      function unlockAudio() {
+        const Ctor = window.AudioContext || window.webkitAudioContext;
+        if (!Ctor) return;
+        // iOS mutes Web Audio when the ringer switch is off unless the page asks for playback.
+        try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch { /* unsupported */ }
+        if (!ctx) {
+          ctx = new Ctor({ latencyHint: "interactive" });
+          master = ctx.createGain();
+          master.gain.value = muted ? 0 : 0.42;
+          master.connect(ctx.destination);
+        }
+        // "interrupted" is iOS-only (calls, Siri, other apps); resume() recovers it like "suspended".
+        if (ctx.state !== "running") ctx.resume().catch(() => {});
+      }
+      // iOS only treats touchend/pointerup/click as audio-unlocking gestures, not pointerdown.
+      // Call this from pointerup and play one silent frame so the context is truly started.
+      function primeAudio() {
+        unlockAudio();
+        if (primed || !ctx) return;
+        try {
+          const src = ctx.createBufferSource();
+          src.buffer = ctx.createBuffer(1, 1, 22050);
+          src.connect(ctx.destination);
+          src.start(0);
+          primed = true;
+        } catch { /* try again on the next gesture */ }
+      }
+
+      let hapticLabel = null;
+      // Android: Vibration API. iOS 17.4+ Safari: toggling a hidden <input switch> via its label ticks the Taptic Engine.
+      function haptic(count) {
+        if (!save.haptics) return;
+        try {
+          if (navigator.vibrate) {
+            navigator.vibrate(count === 1 ? 14 : Array.from({ length: count * 2 - 1 }, (_, i) => (i % 2 ? 45 : 14)));
+            return;
+          }
+          if (!hapticLabel) {
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.setAttribute("switch", "");
+            input.id = "haptic-switch";
+            input.tabIndex = -1;
+            hapticLabel = document.createElement("label");
+            hapticLabel.htmlFor = input.id;
+            hapticLabel.setAttribute("aria-hidden", "true");
+            hapticLabel.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
+            hapticLabel.append(input);
+            document.body.append(hapticLabel);
+          }
+          for (let i = 0; i < count; i += 1) {
+            if (i === 0) hapticLabel.click();
+            else setTimeout(() => hapticLabel.click(), i * 75);
+          }
+        } catch { /* haptics are best effort */ }
+      }
+      function audioReady() { return Boolean(ctx && master && !muted && ctx.state === "running"); }
+      function tone({ type, freq, to, dur, peak, filter }) {
+        if (!audioReady()) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const t = ctx.currentTime;
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        if (to) osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+        let node = osc;
+        if (filter) {
+          const low = ctx.createBiquadFilter();
+          low.type = "lowpass";
+          low.frequency.value = filter;
+          osc.connect(low);
+          node = low;
+        }
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(peak, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        node.connect(gain);
+        gain.connect(master);
+        osc.start(t);
+        osc.stop(t + dur + 0.02);
+      }
+      function playLight(index) { tone({ type: "square", freq: (176 + index * 46) * (0.97 + Math.random() * 0.06), dur: 0.07, peak: 0.09, filter: 1400 }); }
+      function playLock() { tone({ type: "sine", freq: 880, dur: 0.09, peak: 0.12 }); }
+      function playFault() { tone({ type: "sawtooth", freq: 190, to: 70, dur: 0.3, peak: 0.16, filter: 900 }); }
+      function playBest() {
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+          window.setTimeout(() => tone({ type: "triangle", freq, dur: 0.18, peak: 0.16 }), i * 70);
+        });
+      }
+
+      function defaultSave() {
+        return { version: 1, bestMs: null, bestStreak: 0, runs: [], logged: 0, records: { qualifying: null, sprint: null, race: null }, session: [], tipDismissed: false, sound: true, shake: true, haptics: true, mode: "practice" };
+      }
+      function bestMsOf(runs) {
+        let best = null;
+        for (const run of runs) {
+          if (run.fault || run.ms == null) continue;
+          if (best == null || run.ms < best) best = run.ms;
+        }
+        return best;
+      }
+      function mean(values) {
+        if (!values.length) return null;
+        return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+      }
+      function spread(values) {
+        if (values.length < 2) return null;
+        const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+        const variance = values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / (values.length - 1);
+        return Math.round(Math.sqrt(variance));
+      }
+      function cleanStreak(runs) {
+        let count = 0;
+        for (const run of runs) {
+          if (run.fault) break;
+          count += 1;
+        }
+        return count;
+      }
+      function sessionScore(runs, penalty) {
+        return runs.reduce((sum, run) => sum + (run.fault || run.ms == null ? penalty : run.ms), 0);
+      }
+      function gaussian() {
+        const u = Math.random() || 1e-9;
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+      }
+      // Rank the player (ms, or null for a jump) against a fresh draw for each AI driver. Ties go to the AI.
+      function runRace(ms) {
+        const rows = FIELD.map((d) => ({ name: d.code, ms: Math.max(MIN_REACT_MS + 10, Math.round(d.mean + d.sd * gaussian())), you: false }));
+        rows.push({ name: "You", ms: ms == null ? Infinity : ms, you: true, fault: ms == null });
+        rows.sort((a, b) => a.ms - b.ms);
+        const pos = rows.findIndex((row) => row.you) + 1;
+        return { grid: rows, pos, points: ms == null ? 0 : POINTS[pos - 1] };
+      }
+      function formatMs(ms) { return ms == null ? "—" : ms + " ms"; }
+      function band(ms) {
+        if (ms < 120) return { name: "Elite", hint: "Top of the human range." };
+        if (ms < 180) return { name: "Pro", hint: "Start-line quick." };
+        if (ms < 250) return { name: "Sharp", hint: "Clean getaway." };
+        if (ms < 340) return { name: "Solid", hint: "Room to tighten." };
+        return { name: "Late", hint: "Eyes up on the gantry." };
+      }
+      function currentAttempt(phase, length, result) {
+        const logged = phase === "result" && result && result.kind !== "missed";
+        return Math.max(1, logged ? length : length + 1);
+      }
+      function validRun(run) {
+        return Boolean(run) && typeof run === "object" && typeof run.fault === "boolean" && (run.fault || (typeof run.ms === "number" && run.ms >= 0));
+      }
+      function sanitizeSave(parsed) {
+        if (!parsed || typeof parsed !== "object") return null;
+        const runs = Array.isArray(parsed.runs) ? parsed.runs.filter(validRun).slice(0, 40) : [];
+        const mode = MODES[parsed.mode] ? parsed.mode : "practice";
+        const total = MODES[mode].runs;
+        const stored = Array.isArray(parsed.session) ? parsed.session.filter(validRun) : [];
+        const records = parsed.records && typeof parsed.records === "object" ? parsed.records : {};
+        const num = (value) => (typeof value === "number" && value >= 0 ? Math.round(value) : null);
+        return {
+          version: 1,
+          bestMs: typeof parsed.bestMs === "number" ? Math.round(parsed.bestMs) : bestMsOf(runs),
+          bestStreak: typeof parsed.bestStreak === "number" ? Math.round(parsed.bestStreak) : cleanStreak(runs),
+          runs,
+          logged: typeof parsed.logged === "number" ? Math.max(runs.length, Math.round(parsed.logged)) : runs.length,
+          records: { qualifying: num(records.qualifying), sprint: num(records.sprint), race: num(records.race) },
+          session: total != null && stored.length < total ? stored : [],
+          tipDismissed: parsed.tipDismissed === true,
+          sound: typeof parsed.sound === "boolean" ? parsed.sound : true,
+          shake: typeof parsed.shake === "boolean" ? parsed.shake : true,
+          haptics: typeof parsed.haptics === "boolean" ? parsed.haptics : true,
+          mode,
+        };
+      }
+      function loadSave() {
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          return (raw && sanitizeSave(JSON.parse(raw))) || defaultSave();
+        } catch {
+          return defaultSave();
+        }
+      }
+      function persist() {
+        const total = MODES[save.mode].runs;
+        save.session = total != null && session.length < total ? session : [];
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch { /* private mode */ }
+      }
+      function isIOS() {
+        return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      }
+      function isStandalone() {
+        return navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+      }
+
+      const sim = { phase: "idle", lit: 0, lightAt: [], goAt: 0, goStamp: 0, raf: 0, stampFix: 0, missed: 0, lastPress: -1000 };
+      let save = loadSave();
+      let session = save.session.slice();
+      let last = null;
+      let shaking = false;
+      let flash = null;
+      let pop = 0;
+      let resetArmed = false;
+      let shakeTimer = 0;
+      let flashTimer = 0;
+      let resetTimer = 0;
+      let announced = "";
+      let paintedPop = -1;
+      muted = !save.sound;
+
+      function prefersStill() { return matchMedia("(prefers-reduced-motion: reduce)").matches; }
+      function stampOf(stamp) {
+        const now = performance.now();
+        if (stamp > 0 && Math.abs(stamp - now) < 250) return stamp;
+        return now;
+      }
+      function clearTimers() {
+        if (sim.raf) cancelAnimationFrame(sim.raf);
+        sim.raf = 0;
+        if (sim.stampFix) cancelAnimationFrame(sim.stampFix);
+        sim.stampFix = 0;
+        if (sim.missed) clearTimeout(sim.missed);
+        sim.missed = 0;
+      }
+      function triggerShake() {
+        if (!save.shake || prefersStill()) return;
+        shaking = true;
+        clearTimeout(shakeTimer);
+        shakeTimer = setTimeout(() => { shaking = false; render(); }, 320);
+      }
+      function triggerFlash(kind) {
+        if (prefersStill()) return;
+        flash = kind;
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => { flash = null; render(); }, 460);
+      }
+
+      function dossier() {
+        if (!save.logged) return "Times stay on this device.";
+        const parts = [save.logged + " logged"];
+        const streak = cleanStreak(save.runs);
+        if (streak >= 2) parts.push(streak + " clean");
+        if (save.bestStreak >= 3) parts.push("best streak " + save.bestStreak);
+        return parts.join(" · ");
+      }
+      function kickerFor(complete) {
+        if (complete) return "Complete";
+        const total = MODES[save.mode].runs;
+        if (total == null) return "Practice";
+        const attempt = Math.min(total, currentAttempt(sim.phase, session.length, last));
+        return save.mode === "qualifying" ? "Q" + attempt + " / " + total : save.mode === "race" ? "Race " + attempt + " / " + total : attempt + " / " + total;
+      }
+      function deriveView() {
+        const meta = MODES[save.mode];
+        const complete = sim.phase === "result" && meta.runs != null && session.length >= meta.runs;
+        const shell = {
+          kicker: kickerFor(complete), status: "Tap to arm", tone: "idle", readout: null, unit: null, word: false,
+          hint: save.mode === "qualifying" ? "Five starts. Your quickest is pole." : save.mode === "sprint" ? "Ten starts. Each jump adds half a second." : save.mode === "race" ? "Five starts, five AI drivers. Beat them off the line." : "Five pairs, then darkness. Go the instant they drop.",
+          via: null, banner: null, aria: "Arm the start", announcement: "", highlight: "ink",
+        };
+        if (sim.phase === "sequence") return { ...shell, status: "Hold", tone: "wait", hint: "Leave early and it's a jump start.", aria: "Lights are coming on. Wait for darkness." };
+        if (sim.phase === "live") return { ...shell, status: "Lights out", tone: "go", hint: "Go.", aria: "Lights out. React now.", highlight: "go" };
+        if (sim.phase === "result" && last) {
+          if (complete && save.mode === "qualifying") {
+            const pole = bestMsOf(session);
+            if (pole == null) return { ...shell, status: "No time", tone: "fault", readout: "No time", word: true, hint: "Five jumps. Tap to start fresh.", aria: "Qualifying over with no time. Start again.", announcement: "Qualifying complete. No time.", highlight: "fault", banner: null };
+            const bestPole = save.records.qualifying;
+            return { ...shell, status: "Pole", tone: "go", readout: String(pole), unit: "ms", hint: last.record ? "New best pole. Tap for a new session." : bestPole != null ? "Best pole " + bestPole + " ms. Tap for a new session." : "Quickest of the five. Tap for a new session.", aria: "Pole " + pole + " milliseconds. Start again.", announcement: "Qualifying pole, " + pole + " milliseconds." + (last.record ? " New record." : ""), highlight: "go", banner: last.record ? "New record" : last.newBest ? "New best" : null };
+          }
+          if (complete && save.mode === "race") {
+            const total = session.reduce((sum, run) => sum + (run.points || 0), 0);
+            const wins = session.filter((run) => !run.fault && run.pos === 1).length;
+            const bestPts = save.records.race;
+            const note = last.record ? "New best score." : bestPts != null ? "Best " + bestPts + " pts." : "";
+            return { ...shell, status: wins >= 3 ? "Dominant" : total >= 60 ? "Podium form" : total > 0 ? "Points finish" : "No points", tone: total >= 60 ? "go" : "idle", readout: String(total), unit: "pts", hint: wins + " win" + (wins === 1 ? "" : "s") + " from " + meta.runs + ". " + note + " Tap for a new race.", aria: "Race over. " + total + " points. Start again.", announcement: "Race complete. " + total + " points." + (last.record ? " New record." : ""), highlight: total >= 60 ? "go" : "ink", banner: last.record ? "New record" : null };
+          }
+          if (save.mode === "race" && last.kind !== "missed" && last.pos) {
+            const jump = last.kind === "fault";
+            const tone = jump ? "fault" : last.pos <= 3 ? "go" : "idle";
+            return { ...shell, status: "P" + last.pos, tone, readout: jump ? "Fault" : String(last.ms), unit: jump ? null : "ms", word: jump, via: last.input ? VIA[last.input] : null, hint: jump ? (last.reason === "anticipated" ? "Anticipated. No points." : "Jump start. No points.") : "+" + last.points + " pts. Tap for the next start.", aria: (jump ? "Jump start. " : last.ms + " milliseconds. ") + "Finished P" + last.pos + ". Next start.", announcement: (jump ? "Jump start. " : last.ms + " milliseconds. ") + "P" + last.pos + ".", highlight: jump ? "fault" : last.pos <= 3 ? "go" : "ink", banner: last.newBest ? "New best" : null };
+          }
+          if (complete && save.mode === "sprint") {
+            const clock = (sessionScore(session, meta.penalty) / 1000).toFixed(3);
+            const jumps = session.filter((run) => run.fault).length;
+            const clean = jumps === 0;
+            return { ...shell, status: "Total", tone: clean ? "go" : "idle", readout: clock, unit: "s", hint: (clean ? "Clean sprint." : jumps + " jump" + (jumps === 1 ? "" : "s") + " in the total.") + (last.record ? " New best total." : save.records.sprint != null ? " Best " + (save.records.sprint / 1000).toFixed(3) + "s." : "") + " Tap to run it again.", aria: "Sprint total " + clock + " seconds. Start again.", announcement: "Sprint total " + clock + " seconds." + (last.record ? " New record." : ""), highlight: clean ? "go" : "ink", banner: last.record ? "New record" : last.newBest ? "New best" : null };
+          }
+          if (last.kind === "missed") return { ...shell, status: "Stood down", tone: "wait", readout: "—", word: true, hint: "No time logged. Tap to re-arm.", aria: "Stood down. Arm the start.", announcement: "Stood down. No time logged." };
+          if (last.kind === "fault") {
+            const anticipated = last.reason === "anticipated";
+            return { ...shell, status: "Jump start", tone: "fault", readout: "Fault", word: true, via: last.input ? VIA[last.input] : null, hint: anticipated ? "Under " + MIN_REACT_MS + " ms is guessing, not reacting. Tap to try again." : "Too early. Tap to try again.", aria: "Jump start. Try again.", announcement: anticipated ? "Jump start. Faster than a human reaction." : "Jump start.", highlight: "fault" };
+          }
+          const ms = last.ms || 0;
+          const rating = band(ms);
+          let hint = rating.hint;
+          if (last.newBest) hint = "New personal best.";
+          else if (save.bestMs != null && !last.newBest) {
+            const delta = ms - save.bestMs;
+            hint = delta === 0 ? "Matched your best." : delta + " ms off your best.";
+          }
+          const quick = ms < 250;
+          const late = ms >= 340;
+          return { ...shell, status: rating.name, tone: quick ? "go" : late ? "fault" : "idle", readout: String(ms), unit: "ms", via: last.input ? VIA[last.input] : null, hint, banner: last.newBest ? "New best" : null, aria: ms + " milliseconds, " + rating.name + ". Go again.", announcement: ms + " milliseconds. " + rating.name + ".", highlight: last.newBest || quick ? "go" : late ? "fault" : "ink" };
+        }
+        return shell;
+      }
+      function deriveStats() {
+        const meta = MODES[save.mode];
+        const recent = save.runs.slice(0, 12).flatMap((run) => (!run.fault && run.ms != null ? [run.ms] : []));
+        if (meta.runs == null) {
+          return [
+            { label: "Best", value: formatMs(save.bestMs), tone: save.bestMs == null ? "ink" : "go" },
+            { label: "Average", value: formatMs(mean(recent)), tone: "ink" },
+            { label: "Spread", value: formatMs(spread(recent)), tone: "ink" },
+          ];
+        }
+        const attempt = Math.min(meta.runs, currentAttempt(sim.phase, session.length, last));
+        if (save.mode === "race") {
+          const total = session.reduce((sum, run) => sum + (run.points || 0), 0);
+          return [
+            { label: "Points", value: String(total), tone: total > 0 ? "go" : "ink" },
+            { label: "Start", value: attempt + "/" + meta.runs, tone: "ink" },
+            { label: "Best", value: save.records.race == null ? "—" : save.records.race + " pts", tone: save.records.race == null ? "ink" : "go" },
+          ];
+        }
+        if (save.mode === "qualifying") {
+          const pole = bestMsOf(session);
+          return [
+            { label: "Pole", value: formatMs(pole), tone: pole == null ? "ink" : "go" },
+            { label: "Attempt", value: attempt + "/" + meta.runs, tone: "ink" },
+            { label: "Best pole", value: formatMs(save.records.qualifying), tone: save.records.qualifying == null ? "ink" : "go" },
+          ];
+        }
+        const jumps = session.filter((run) => run.fault).length;
+        return [
+          { label: "Total", value: session.length === 0 ? "—" : (sessionScore(session, meta.penalty) / 1000).toFixed(3) + "s", tone: "ink" },
+          { label: "Run", value: attempt + "/" + meta.runs, tone: "ink" },
+          { label: "Jumps", value: String(jumps), tone: jumps > 0 ? "fault" : "ink" },
+        ];
+      }
+
+      function render() {
+        const view = deriveView();
+        const mood = flash === "fault" ? "is-fault" : flash === "best" ? "is-best" : sim.lit === 5 ? "is-charged" : "";
+        document.documentElement.classList.toggle("is-playing", sim.phase === "sequence" || sim.phase === "live");
+        $("gantry").className = ["gantry", mood, shaking ? "is-shaking" : ""].filter(Boolean).join(" ");
+        bulbs.forEach((pair, index) => pair.querySelectorAll(".bulb").forEach((bulb) => bulb.classList.toggle("is-on", index < sim.lit)));
+        $("led").className = ["led", flash === "fault" ? "is-fault" : flash === "best" ? "is-best" : sim.lit > 0 ? "is-hot" : ""].filter(Boolean).join(" ");
+        $("kicker").textContent = view.kicker;
+        $("status").textContent = view.status;
+        $("status").className = "status tone-" + view.tone;
+        $("banner").textContent = view.banner || "";
+        $("hint").textContent = view.hint;
+        $("via").textContent = view.via || "";
+        $("play").setAttribute("aria-label", view.aria);
+        $("dossier").textContent = dossier();
+        $("blurb").textContent = MODES[save.mode].blurb;
+        document.querySelectorAll("[data-mode]").forEach((button) => button.setAttribute("aria-selected", String(button.dataset.mode === save.mode)));
+
+        const readout = $("readout");
+        readout.replaceChildren();
+        if (view.readout) {
+          const num = document.createElement("span");
+          num.className = "readout-num tone-" + view.highlight + (view.word ? " is-word" : "") + (paintedPop !== pop ? " readout-pop" : "");
+          num.textContent = view.readout;
+          readout.append(num);
+          if (view.unit) {
+            const unit = document.createElement("span");
+            unit.className = "readout-unit";
+            unit.textContent = view.unit;
+            readout.append(unit);
+          }
+          paintedPop = pop;
+        }
+
+        const stats = $("stats");
+        stats.replaceChildren();
+        for (const stat of deriveStats()) {
+          const card = document.createElement("div");
+          card.className = "stat";
+          const label = document.createElement("div");
+          label.className = "stat-label";
+          label.textContent = stat.label;
+          const value = document.createElement("div");
+          value.className = "stat-value tone-" + stat.tone;
+          value.textContent = stat.value;
+          card.append(label, value);
+          stats.append(card);
+        }
+        renderBoard();
+
+        const sound = $("sound");
+        sound.setAttribute("aria-pressed", String(save.sound));
+        sound.setAttribute("aria-label", save.sound ? "Mute sound" : "Unmute sound");
+        sound.querySelector(".icon-on").hidden = !save.sound;
+        sound.querySelector(".icon-off").hidden = save.sound;
+        $("reset").hidden = resetArmed;
+        $("confirm").hidden = !resetArmed;
+        $("reset").disabled = !(save.logged || save.runs.length || save.bestMs != null || save.bestStreak > 0 || save.records.qualifying != null || save.records.sprint != null || save.records.race != null);
+        const shake = $("shake");
+        shake.setAttribute("aria-pressed", String(save.shake));
+        shake.textContent = "Screen shake " + (save.shake ? "on" : "off");
+        const haptics = $("haptics");
+        haptics.setAttribute("aria-pressed", String(save.haptics));
+        haptics.textContent = "Haptics " + (save.haptics ? "on" : "off");
+        $("install").hidden = !(isIOS() && !isStandalone() && !save.tipDismissed);
+        if (view.announcement && view.announcement !== announced) {
+          announced = view.announcement;
+          $("live").textContent = view.announcement;
+        }
+      }
+
+      function renderBoard() {
+        const board = $("board");
+        board.replaceChildren();
+        const meta = MODES[save.mode];
+        if (meta.runs == null) {
+          board.className = "history";
+          const label = document.createElement("div");
+          label.className = "board-label";
+          label.textContent = "Last 12";
+          const windowRuns = save.runs.slice(0, 12).slice().reverse();
+          const values = windowRuns.flatMap((run) => (run.fault || run.ms == null ? [] : [run.ms]));
+          const best = values.length ? Math.min(...values) : null;
+          const max = values.length ? Math.max(...values, 280) : 280;
+          const bars = document.createElement("div");
+          if (!windowRuns.length) {
+            bars.className = "bars is-empty";
+            bars.textContent = "Starts show up here.";
+          } else {
+            bars.className = "bars";
+            bars.setAttribute("aria-hidden", "true");
+            for (const run of windowRuns) {
+              const fault = run.fault || run.ms == null;
+              const wrap = document.createElement("div");
+              wrap.className = "bar-wrap";
+              wrap.title = fault ? "Jump start" : run.ms + " ms";
+              const bar = document.createElement("div");
+              bar.className = "bar" + (!fault && run.ms === best ? " is-best" : "") + (fault ? " is-fault" : "");
+              bar.style.height = (fault ? 100 : Math.max(8, Math.min(100, (run.ms / max) * 100))) + "%";
+              wrap.append(bar);
+              bars.append(wrap);
+            }
+          }
+          board.append(label, bars);
+          return;
+        }
+        board.className = "session-wrap";
+        if (save.mode === "race" && sim.phase === "result" && last && last.grid) {
+          const standings = document.createElement("ol");
+          standings.className = "grid-list";
+          standings.setAttribute("aria-label", "Start result");
+          last.grid.forEach((row, index) => {
+            const item = document.createElement("li");
+            item.className = "grid-row" + (row.you ? " is-you" : "") + (row.fault ? " is-fault" : "") + (index === 0 ? " is-win" : "");
+            const pos = document.createElement("span");
+            pos.className = "grid-pos";
+            pos.textContent = "P" + (index + 1);
+            const name = document.createElement("span");
+            name.textContent = row.name;
+            const time = document.createElement("span");
+            time.className = "grid-time";
+            time.textContent = row.fault ? "FS" : row.ms + " ms";
+            item.append(pos, name, time);
+            standings.append(item);
+          });
+          board.append(standings);
+        }
+        const pole = bestMsOf(session);
+        const list = document.createElement("ol");
+        list.className = "session";
+        for (let index = 0; index < meta.runs; index += 1) {
+          const run = session[index];
+          const isNext = sim.phase !== "result" && index === session.length;
+          const isLatest = sim.phase === "result" && index === session.length - 1;
+          const isBest = run && !run.fault && run.ms != null && (save.mode === "race" ? run.pos === 1 : run.ms === pole);
+          const item = document.createElement("li");
+          item.className = "cell" + (isBest ? " is-best" : isNext || isLatest ? " is-next" : "");
+          const label = document.createElement("div");
+          label.className = "cell-label";
+          label.textContent = save.mode === "qualifying" ? "Q" + (index + 1) : String(index + 1);
+          const value = document.createElement("div");
+          value.className = "cell-value" + (run && run.fault ? " tone-fault" : isBest ? " tone-go" : "");
+          value.textContent = !run ? "—" : save.mode === "race" && run.pos ? "P" + run.pos : run.fault || run.ms == null ? "FS" : String(run.ms);
+          item.append(label, value);
+          list.append(item);
+        }
+        board.append(list);
+      }
+
+      function settleSession() {
+        const race = save.mode === "race";
+        const score = race ? session.reduce((sum, run) => sum + (run.points || 0), 0) : save.mode === "qualifying" ? bestMsOf(session) : sessionScore(session, MODES[save.mode].penalty);
+        if (score == null || (race && score <= 0)) return false;
+        const previous = save.records[save.mode];
+        if (previous != null && (race ? score <= previous : score >= previous)) return false;
+        save.records[save.mode] = score;
+        return true;
+      }
+      function commit(entry, isNew) {
+        save.runs = [entry, ...save.runs].slice(0, 40);
+        save.logged += 1;
+        if (isNew && entry.ms != null) save.bestMs = entry.ms;
+        if (!entry.fault) save.bestStreak = Math.max(save.bestStreak, cleanStreak(save.runs));
+        const total = MODES[save.mode].runs;
+        let record = false;
+        if (total != null) {
+          session = [...session, entry].slice(0, total);
+          if (session.length >= total) record = settleSession();
+        }
+        persist();
+        return record;
+      }
+      function standDown() {
+        if (sim.phase !== "sequence" && sim.phase !== "live") return;
+        clearTimers();
+        sim.phase = "result";
+        sim.lit = 0;
+        last = { kind: "missed", ms: null, input: null, newBest: false };
+        pop += 1;
+        render();
+      }
+      function loop(now) {
+        if (sim.phase !== "sequence") return;
+        if (now >= sim.goAt) {
+          sim.phase = "live";
+          sim.lit = 0;
+          sim.goStamp = now;
+          sim.stampFix = requestAnimationFrame((painted) => {
+            if (sim.phase === "live" && painted - now < 40) sim.goStamp = painted;
+          });
+          sim.missed = setTimeout(() => { if (sim.phase === "live") standDown(); }, MISS_MS);
+          render();
+          return;
+        }
+        let nextLit = 0;
+        for (const at of sim.lightAt) if (now >= at) nextLit += 1;
+        if (nextLit !== sim.lit) {
+          for (let i = sim.lit; i < nextLit; i += 1) playLight(i);
+          sim.lit = nextLit;
+          render();
+        }
+        sim.raf = requestAnimationFrame(loop);
+      }
+      // Keep the gantry and the readout on screen for the run (matters in landscape and on short phones).
+      function frameStage() {
+        const top = $("gantry").getBoundingClientRect().top;
+        const bottom = $("readout").getBoundingClientRect().bottom;
+        if (top < 0) window.scrollBy(0, top - 12);
+        else if (bottom > window.innerHeight) window.scrollBy(0, Math.min(bottom - window.innerHeight + 12, top - 12));
+      }
+      function begin(now) {
+        clearTimers();
+        const meta = MODES[save.mode];
+        if (meta.runs != null && session.length >= meta.runs) session = [];
+        sim.lightAt = Array.from({ length: 5 }, (_, i) => now + meta.arm + i * meta.gap);
+        const hold = meta.holdMin + Math.random() * (meta.holdMax - meta.holdMin);
+        sim.goAt = sim.lightAt[4] + hold;
+        sim.lit = 0;
+        sim.goStamp = 0;
+        sim.phase = "sequence";
+        last = null;
+        flash = null;
+        render();
+        frameStage();
+        sim.raf = requestAnimationFrame(loop);
+      }
+      function finishFault(input, reason) {
+        sim.phase = "result";
+        sim.lit = 0;
+        const entry = { ms: null, fault: true, mode: save.mode, at: Date.now(), input };
+        if (reason) entry.reason = reason;
+        const race = save.mode === "race" ? runRace(null) : null;
+        if (race) { entry.pos = race.pos; entry.points = race.points; }
+        const record = commit(entry, false);
+        last = { kind: "fault", ms: null, input, newBest: false, record, reason, ...(race || {}) };
+        pop += 1;
+        haptic(2);
+        playFault();
+        triggerShake();
+        triggerFlash("fault");
+        render();
+      }
+      function finishTime(ms, input) {
+        const isNew = save.bestMs == null || ms < save.bestMs;
+        sim.phase = "result";
+        const entry = { ms, fault: false, mode: save.mode, at: Date.now(), input };
+        const race = save.mode === "race" ? runRace(ms) : null;
+        if (race) { entry.pos = race.pos; entry.points = race.points; }
+        const record = commit(entry, isNew);
+        last = { kind: "time", ms, input, newBest: isNew, record, ...(race || {}) };
+        pop += 1;
+        if (isNew || record) { haptic(3); playBest(); triggerShake(); triggerFlash("best"); }
+        else { haptic(1); playLock(); }
+        render();
+      }
+      let askedPersist = false;
+      function requestPersistentStorage() {
+        if (askedPersist) return;
+        askedPersist = true;
+        try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch { /* optional */ }
+      }
+      function press(stamp, input) {
+        unlockAudio();
+        const now = performance.now();
+        if (now - sim.lastPress < 80) return;
+        sim.lastPress = now;
+        if (sim.phase === "sequence") { clearTimers(); finishFault(input); return; }
+        if (sim.phase === "live") {
+          const ms = Math.max(0, Math.round(stampOf(stamp) - sim.goStamp));
+          clearTimers();
+          if (ms < MIN_REACT_MS) finishFault(input, "anticipated");
+          else finishTime(ms, input);
+          return;
+        }
+        requestPersistentStorage();
+        begin(now);
+      }
+
+      document.querySelectorAll("[data-mode]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const next = button.dataset.mode;
+          if (!next || next === save.mode) return;
+          clearTimers();
+          sim.phase = "idle";
+          sim.lit = 0;
+          last = null;
+          flash = null;
+          session = [];
+          save.mode = next;
+          persist();
+          render();
+        });
+      });
+      // While the lights run the whole screen is the trigger (controls go inert via .is-playing).
+      // Otherwise only the play surface arms a start, so scrolling and the controls keep working.
+      document.addEventListener("pointerdown", (event) => {
+        if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
+        const running = sim.phase === "sequence" || sim.phase === "live";
+        const onPlay = event.target instanceof Element && event.target.closest("#play");
+        if (!running && !onPlay) return;
+        event.preventDefault();
+        const input = event.pointerType === "touch" ? "touch" : event.pointerType === "pen" ? "pen" : "mouse";
+        press(event.timeStamp, input);
+      });
+      document.addEventListener("pointerup", primeAudio);
+      document.addEventListener("click", primeAudio);
+      $("play").addEventListener("contextmenu", (event) => event.preventDefault());
+      $("sound").addEventListener("click", () => { unlockAudio(); save.sound = !save.sound; setMuted(!save.sound); persist(); render(); });
+      $("shake").addEventListener("click", () => { save.shake = !save.shake; persist(); render(); });
+      $("haptics").addEventListener("click", () => { save.haptics = !save.haptics; persist(); render(); haptic(1); });
+      $("installDismiss").addEventListener("click", () => { save.tipDismissed = true; persist(); render(); });
+
+      function note(text) { $("fileNote").textContent = text; }
+      $("export").addEventListener("click", async () => {
+        const body = JSON.stringify({ app: "lights-out", exportedAt: new Date().toISOString(), data: save }, null, 2);
+        const name = "lights-out-records.json";
+        try {
+          const file = new File([body], name, { type: "application/json" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: "Lights Out records" });
+            note("Records shared.");
+            return;
+          }
+          const url = URL.createObjectURL(new Blob([body], { type: "application/json" }));
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = name;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+          note("Records saved as " + name + ".");
+        } catch (error) {
+          if (!error || error.name !== "AbortError") note("Could not export records.");
+        }
+      });
+      $("import").addEventListener("click", () => $("importFile").click());
+      $("importFile").addEventListener("change", async (event) => {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = "";
+        if (!file) return;
+        try {
+          const parsed = JSON.parse(await file.text());
+          const next = sanitizeSave(parsed && parsed.data ? parsed.data : parsed);
+          if (!next) throw new Error("bad file");
+          if (save.logged && !window.confirm("Replace the records on this device with the ones in this file?")) return;
+          clearTimers();
+          save = next;
+          session = save.session.slice();
+          last = null;
+          flash = null;
+          sim.phase = "idle";
+          sim.lit = 0;
+          muted = !save.sound;
+          if (ctx && master) master.gain.setTargetAtTime(muted ? 0 : 0.42, ctx.currentTime, 0.02);
+          persist();
+          render();
+          note("Imported " + save.logged + " logged starts.");
+        } catch {
+          note("That file is not a Lights Out export.");
+        }
+      });
+      $("reset").addEventListener("click", () => {
+        resetArmed = true;
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => { resetArmed = false; render(); }, 2500);
+        render();
+      });
+      $("confirm").addEventListener("click", () => {
+        clearTimers();
+        const sound = save.sound;
+        const shake = save.shake;
+        const mode = save.mode;
+        const haptics = save.haptics;
+        const tipDismissed = save.tipDismissed;
+        save = defaultSave();
+        save.sound = sound;
+        save.shake = shake;
+        save.haptics = haptics;
+        save.tipDismissed = tipDismissed;
+        save.mode = mode;
+        session = [];
+        last = null;
+        flash = null;
+        sim.phase = "idle";
+        sim.lit = 0;
+        resetArmed = false;
+        persist();
+        render();
+      });
+      window.addEventListener("keydown", (event) => {
+        if (event.repeat) return;
+        if (event.key === "Escape") { event.preventDefault(); standDown(); return; }
+        if (event.key !== " " && event.key !== "Enter") return;
+        if (event.target instanceof Element && event.target.closest("[data-control]")) return;
+        event.preventDefault();
+        press(event.timeStamp, "keyboard");
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          persist();
+          standDown();
+        } else if (ctx && ctx.state !== "running") ctx.resume().catch(() => {});
+      });
+      window.addEventListener("pageshow", () => { if (ctx && ctx.state !== "running") ctx.resume().catch(() => {}); });
+      document.addEventListener("selectstart", (event) => event.preventDefault());
+      document.addEventListener("contextmenu", (event) => event.preventDefault());
+      render();
+      if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+        window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+      }
+    })();
+  </script>
+</body>
+</html>
