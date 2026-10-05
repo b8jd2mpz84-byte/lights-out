@@ -1,5 +1,5 @@
 // Offline cache for Lights Out. Bump VERSION when shipping changes so installed copies refresh.
-const VERSION = "lights-out-v6";
+const VERSION = "lights-out-v7";
 const ASSETS = [
   "./",
   "./index.html",
